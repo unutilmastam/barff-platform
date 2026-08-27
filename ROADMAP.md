@@ -67,7 +67,7 @@ Claude Code updates this list. `[x]` = done and merged.
 
 **Phase 0**
 - [x] S00 Repo bootstrap
-- [ ] S01 Shared packages skeleton
+- [x] S01 Shared packages skeleton
 - [ ] S02 NestJS API skeleton
 - [ ] S03 Prisma + core schema + seed
 - [ ] S04 Auth + RBAC
