@@ -56,6 +56,8 @@ Source: `ASSETS.md` §5.
 | Q-021 | Product claims | *100% NATURAL*, *QO'SHIMCHA SHAKAR YO'Q*, *KONSERVANT VA BO'YOQLARSIZ* are regulated claims. Confirm in writing before repeating them on the website. | All public copy | OPEN | — |
 | Q-022 | Product renders | All bottle renders are 3D/AI mockups — irregular label text becomes visible at full-page or zoom size. Can BARFF supply real studio photography? | `/products/[slug]` | OPEN | — |
 | Q-023 | `apelsin-350-real-photo.jpg` | Real photo (960×1280, phone quality) shows a different, darker label design than the render. Which design is currently in production? The site must show what the dealer actually receives. | S09, S12 | OPEN | — |
+| Q-024 | Currency precision | Should UZS amounts be stored and invoiced in tiyin (2 decimals, the ISO 4217 definition) or in whole so'm? Tiyin are no longer in circulation. S01 stores the finer unit because rounding up to whole so'm later is safe and recovering lost precision is not. | S23 pricing, S36 invoices | OPEN | — |
+| Q-025 | Lead taxonomy | What is the list of business types for the B2B form (distributor, retail chain, HoReCa, …)? Kept as free text in `@barff/validation` until answered — inventing enum values would bake fictional facts into the schema and the database. Pairs with Q-007 (delivery regions). | S14 lead form, S20 pipeline | OPEN | — |
 
 ## 4. Decisions to record
 
@@ -64,3 +66,7 @@ Architectural decisions taken because an answer was missing. Revisit when the qu
 | ID | Decision | Taken at | Reason |
 |---|---|---|---|
 | D-001 | MinIO is the local S3-compatible store; the storage provider sits behind an adapter interface | S00 | Keeps local dev off AWS and lets S08 swap providers without touching call sites |
+| D-002 | Money is carried as integer minor units (`@barff/utils/money`), never as a float | S01 | S36 requires exact money math; `allocateMoney` distributes remainders so a split always sums back to the original |
+| D-003 | `region` and `businessType` on leads are bounded free text, not enums | S01 | The real lists are unknown (Q-007, Q-025); enums would encode invented company facts. Migrating text → enum later is cheap |
+| D-004 | Shared enums are `as const` objects with a matching type union, not TS `enum` | S01 | Gives a value and a type from one declaration, survives `isolatedModules`, tree-shakes, and maps cleanly onto Prisma's generated enums |
+| D-005 | `@barff/utils` declares its own `Locale` union instead of importing `@barff/types` | S01 | Keeps the lowest layer dependency-free; a test in `@barff/validation` asserts the two stay in sync |

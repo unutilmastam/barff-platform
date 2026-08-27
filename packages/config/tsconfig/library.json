@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "BARFF library (packages/*)",
+  "extends": "./base.json",
+  "_comment": "Emit is handled by tsup; `tsc` is only used for typechecking here.",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": []
+  }
+}

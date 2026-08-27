@@ -11,9 +11,9 @@ driver PWA and the API behind them.
 | [`docs/OPEN-QUESTIONS.md`](./docs/OPEN-QUESTIONS.md)   | Everything not yet confirmed by BARFF                              |
 | [`docs/CHANGELOG-STEPS.md`](./docs/CHANGELOG-STEPS.md) | One line per completed roadmap step                                |
 
-> **Current state:** step **S00 — Repo bootstrap**. The workspace, tooling and local
-> infrastructure exist; the apps and services are still empty placeholders. They are filled in
-> by S01–S06.
+> **Current state:** step **S01 — Shared packages skeleton**. The workspace, tooling, local
+> infrastructure and the four shared packages exist. `apps/*`, `services/api` and `packages/ui`
+> are still empty placeholders, filled in by S02–S07.
 
 ---
 
@@ -89,7 +89,30 @@ barff-platform/
 └─ assets/          source media — see ASSETS.md
 ```
 
-TypeScript path aliases (`@barff/types`, `@barff/ui`, …) are declared in `tsconfig.base.json`.
+## Shared packages
+
+| Package             | Contents                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `@barff/config`     | ESLint / TypeScript / Tailwind presets and the design tokens (§16). See its [README](./packages/config/README.md). |
+| `@barff/types`      | Roles, order / delivery / lead statuses, stock movement types, locales, pagination and the API error shape.        |
+| `@barff/utils`      | Money (integer minor units), date (Tashkent time), slug (Cyrillic-aware) and display formatting.                   |
+| `@barff/validation` | Zod schemas shared by the apps and the API — auth, leads, pagination, localized content.                           |
+
+They are consumed by workspace protocol (`"@barff/types": "workspace:*"`) and built with tsup
+into dual ESM/CJS output, so both Next.js and NestJS can import them. Dependency versions for
+shared tooling live in the `catalog:` block of `pnpm-workspace.yaml`.
+
+Three rules hold for everything under `packages/`:
+
+- **No runtime coupling.** A shared package must work in the browser and on the server, so no
+  `console`, no `process.env` — configuration is passed in by the consumer.
+- **No business logic.** State machines, price resolution and authorization live in the API.
+  Shared code carries the vocabulary, not the decisions.
+- **No invented facts.** Where a real BARFF value is unknown, the schema stays permissive and
+  the question goes in `docs/OPEN-QUESTIONS.md`.
+
+TypeScript path aliases (`@barff/types`, `@barff/ui`, …) are declared in `tsconfig.base.json`
+for root-level and app use; the packages themselves resolve each other through node_modules.
 
 ## Assets
 

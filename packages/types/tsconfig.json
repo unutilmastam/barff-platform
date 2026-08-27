@@ -1,0 +1,4 @@
+{
+  "extends": "@barff/config/tsconfig/library.json",
+  "include": ["src/**/*.ts", "tsup.config.ts"]
+}

@@ -2,3 +2,21 @@ packages:
   - 'apps/*'
   - 'services/*'
   - 'packages/*'
+
+# Single source of truth for shared dependency versions across the workspace.
+# Packages reference these with `"typescript": "catalog:"`.
+catalog:
+  '@eslint/js': ^9.39.1
+  eslint: ^9.39.1
+  eslint-config-prettier: ^10.1.8
+  prettier: ^3.6.2
+  tsup: ^8.5.0
+  typescript: ^5.9.3
+  typescript-eslint: ^8.46.2
+  vitest: ^3.2.4
+  zod: ^4.1.13
+
+# esbuild (via tsup) ships a platform binary and needs its postinstall script.
+# pnpm 10 blocks lifecycle scripts unless they are listed here.
+onlyBuiltDependencies:
+  - esbuild
