@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BARFF — tez orada</title>
+<meta name="description" content="BARFF — barff.uz sayti tayyorlanmoqda.">
+<meta name="theme-color" content="#05100A">
+<meta property="og:title" content="BARFF">
+<meta property="og:description" content="barff.uz sayti tayyorlanmoqda.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#05100A;
+  --ink-2:#08170F;
+  --paper:#F2F6F3;
+  --muted:rgba(242,246,243,.56);
+  --line:rgba(242,246,243,.14);
+  --juice:#A3122F;
+  --level:34vh;
+  --easing:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--ink);
+  color:var(--paper);
+  font-family:Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  position:relative;
+}
+
+/* ambient light that takes the current juice colour */
+.glow{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(120% 70% at 50% 108%, color-mix(in srgb, var(--juice) 55%, transparent) 0%, transparent 62%),
+    radial-gradient(80% 50% at 78% 6%, rgba(20,120,66,.22) 0%, transparent 70%);
+  transition:background 1.6s var(--easing);
+}
+
+/* condensation on the glass */
+.drops{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.5}
+.drop{
+  position:absolute;border-radius:50% 50% 52% 48%;
+  background:linear-gradient(160deg,rgba(255,255,255,.5),rgba(255,255,255,.06) 55%,transparent);
+  box-shadow:inset 0 -1px 2px rgba(255,255,255,.4);
+  animation:slip linear infinite;
+}
+@keyframes slip{
+  0%{transform:translateY(-8vh) scale(.9);opacity:0}
+  12%{opacity:.9}
+  70%{opacity:.7}
+  100%{transform:translateY(112vh) scale(1.05);opacity:0}
+}
+
+/* ---------- layout ---------- */
+.stage{
+  position:relative;z-index:3;
+  height:100%;
+  display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 22px) 24px calc(env(safe-area-inset-bottom) + 20px);
+}
+
+.top{display:flex;justify-content:flex-end}
+.lang{display:flex;gap:2px;border:1px solid var(--line);border-radius:999px;padding:3px;backdrop-filter:blur(8px)}
+.lang button{
+  font:600 12px/1 Manrope,sans-serif;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);background:none;border:0;border-radius:999px;
+  padding:8px 12px;cursor:pointer;transition:.25s var(--easing);
+}
+.lang button[aria-pressed="true"]{background:var(--paper);color:var(--ink)}
+.lang button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+
+.core{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:20px;max-width:620px}
+
+.leaf{width:34px;height:34px;opacity:.9;animation:sway 7s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+
+.wordmark{
+  font-family:Outfit,sans-serif;font-weight:800;
+  font-size:clamp(4.2rem,23vw,10rem);
+  line-height:.82;letter-spacing:-.035em;
+  display:flex;
+}
+.wordmark span{
+  display:inline-block;
+  opacity:0;transform:translateY(.34em);
+  animation:rise .9s var(--easing) forwards;
+}
+@keyframes rise{to{opacity:1;transform:none}}
+
+.line{
+  font-family:Outfit,sans-serif;font-weight:300;
+  font-size:clamp(1.05rem,4.6vw,1.5rem);
+  line-height:1.35;color:rgba(242,246,243,.9);
+  max-width:20ch;
+  opacity:0;animation:rise .9s .55s var(--easing) forwards;
+}
+
+.flavour{
+  display:flex;align-items:center;gap:12px;
+  opacity:0;animation:rise .9s .72s var(--easing) forwards;
+}
+.pip{width:9px;height:9px;border-radius:50%;background:var(--juice);flex:none;transition:background 1.6s var(--easing);box-shadow:0 0 0 5px color-mix(in srgb,var(--juice) 22%,transparent)}
+.flavour-name{
+  font:600 12px/1 Manrope,sans-serif;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);
+}
+.flavour-name b{color:var(--paper);font-weight:600}
+
+.cta{
+  display:none;align-items:center;gap:9px;
+  font:600 14px/1 Manrope,sans-serif;letter-spacing:.02em;
+  color:var(--ink);background:var(--paper);
+  padding:15px 22px;border-radius:999px;text-decoration:none;
+  transition:transform .3s var(--easing),box-shadow .3s var(--easing);
+  opacity:0;animation:rise .9s .88s var(--easing) forwards;
+}
+.cta.on{display:inline-flex}
+.cta:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.cta:focus-visible{outline:2px solid var(--paper);outline-offset:3px}
+
+.foot{
+  font:400 11px/1.6 Manrope,sans-serif;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(242,246,243,.34);
+}
+
+/* ---------- the liquid ---------- */
+.liquid{
+  position:fixed;left:0;right:0;bottom:0;z-index:2;
+  height:0;
+  animation:fill 2.6s .3s var(--easing) forwards;
+}
+@keyframes fill{to{height:var(--level)}}
+.liquid-body{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    color-mix(in srgb,var(--juice) 88%,#000 12%) 0%,
+    color-mix(in srgb,var(--juice) 62%,#000 38%) 100%);
+  transition:background 1.6s var(--easing);
+}
+.wave{position:absolute;left:0;bottom:100%;width:200%;height:44px;transition:fill 1.6s var(--easing)}
+.wave path{transition:fill 1.6s var(--easing)}
+.wave-a{fill:color-mix(in srgb,var(--juice) 88%,#000 12%);animation:drift 9s linear infinite}
+.wave-b{fill:color-mix(in srgb,var(--juice) 70%,#000 30%);opacity:.55;animation:drift 13s linear infinite reverse}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+.bubbles{position:absolute;inset:0;overflow:hidden}
+.bubble{
+  position:absolute;bottom:-14px;border-radius:50%;
+  background:rgba(255,255,255,.22);
+  animation:lift linear infinite;
+}
+@keyframes lift{
+  0%{transform:translateY(0) scale(.6);opacity:0}
+  15%{opacity:.7}
+  100%{transform:translateY(calc(-1 * var(--level))) scale(1);opacity:0}
+}
+
+@media (min-width:760px){
+  .stage{padding:34px 56px 30px}
+  .core{gap:26px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .liquid{height:var(--level);animation:none}
+  .drops{display:none}
+  .bubble,.wave-a,.wave-b,.leaf{animation:none}
+  .wordmark span,.line,.flavour,.cta{opacity:1;transform:none;animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+<div class="drops" id="drops" aria-hidden="true"></div>
+
+<div class="liquid" aria-hidden="true">
+  <svg class="wave" viewBox="0 0 1200 44" preserveAspectRatio="none">
+    <path class="wave-b" d="M0,26 C150,4 250,44 400,26 C550,8 650,42 800,26 C950,10 1050,40 1200,26 L1200,44 L0,44 Z"></path>
+  </svg>
+  <svg class="wave" viewBox="0 0 1200 44" preserveAspectRatio="none">
+    <path class="wave-a" d="M0,30 C160,12 260,42 420,28 C580,14 680,40 840,28 C1000,16 1080,38 1200,30 L1200,44 L0,44 Z"></path>
+  </svg>
+  <div class="liquid-body"></div>
+  <div class="bubbles" id="bubbles"></div>
+</div>
+
+<main class="stage">
+  <div class="top">
+    <div class="lang" role="group" aria-label="Til / Язык / Language">
+      <button data-lang="uz" aria-pressed="true">Uz</button>
+      <button data-lang="ru" aria-pressed="false">Ру</button>
+      <button data-lang="en" aria-pressed="false">En</button>
+    </div>
+  </div>
+
+  <div class="core">
+    <svg class="leaf" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <path d="M20 36c0-11 5-18 15-21-1 12-6 19-15 21Z" fill="#2F9E5A"/>
+      <path d="M20 36C20 25 15 18 5 15c1 12 6 19 15 21Z" fill="#1C7A42"/>
+    </svg>
+
+    <h1 class="wordmark" id="wordmark" aria-label="BARFF"></h1>
+    <p class="line" id="line"></p>
+
+    <div class="flavour">
+      <span class="pip"></span>
+      <span class="flavour-name" id="flavourName"></span>
+    </div>
+
+    <a class="cta" id="cta" href="#">
+      <span id="ctaText"></span>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 7h10M7.5 2.5 12 7l-4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</main>
+
+<script>
+/* ============================================================
+   1) CONTACT — put the real values here.
+   While a value still starts with "REPLACE", the button stays hidden.
+   ============================================================ */
+const CONTACT = {
+  href: "REPLACE_WITH_REAL_DATA",   // e.g. "https://t.me/barff_uz"  or  "tel:+998901234567"
+};
+
+/* ============================================================
+   2) Copy. Only what is verifiable: brand, product names, status.
+   ============================================================ */
+const T = {
+  uz:{
+    line:"barff.uz sayti tayyorlanmoqda.",
+    prefix:"Mahsulot",
+    cta:"Bog‘lanish",
+    foot:"© 2026 BARFF"
+  },
+  ru:{
+    line:"Сайт barff.uz в разработке.",
+    prefix:"Продукт",
+    cta:"Связаться",
+    foot:"© 2026 BARFF"
+  },
+  en:{
+    line:"barff.uz is being built.",
+    prefix:"Product",
+    cta:"Get in touch",
+    foot:"© 2026 BARFF"
+  }
+};
+
+const FLAVOURS = [
+  {c:"#A3122F", uz:"Anor",             ru:"Гранат",             en:"Pomegranate"},
+  {c:"#F2760D", uz:"Apelsin",          ru:"Апельсин",           en:"Orange"},
+  {c:"#6E0F1E", uz:"Olcha",            ru:"Вишня",              en:"Cherry"},
+  {c:"#F0913C", uz:"Shaftoli",         ru:"Персик",             en:"Peach"},
+  {c:"#6FA82B", uz:"Olma",             ru:"Яблоко",             en:"Apple"},
+  {c:"#E2A400", uz:"Multifrukt",       ru:"Мультифрукт",        en:"Multifruit"},
+  {c:"#E24132", uz:"Qulupnay–Ananas",  ru:"Клубника–Ананас",    en:"Strawberry–Pineapple"}
+];
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let lang = (navigator.language||"uz").slice(0,2);
+if(!T[lang]) lang = "uz";
+let idx = 0;
+
+/* wordmark, letter by letter */
+const wm = document.getElementById("wordmark");
+"BARFF".split("").forEach((ch,i)=>{
+  const s = document.createElement("span");
+  s.textContent = ch;
+  s.style.animationDelay = (0.12 + i*0.07) + "s";
+  wm.appendChild(s);
+});
+
+function paint(){
+  const t = T[lang], f = FLAVOURS[idx];
+  document.documentElement.lang = lang;
+  document.documentElement.style.setProperty("--juice", f.c);
+  document.getElementById("line").textContent = t.line;
+  document.getElementById("flavourName").innerHTML =
+    t.prefix + " — <b>" + f[lang] + "</b>";
+  document.getElementById("ctaText").textContent = t.cta;
+  document.getElementById("foot").textContent = t.foot;
+  document.querySelectorAll(".lang button").forEach(b=>{
+    b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
+  });
+}
+
+document.querySelectorAll(".lang button").forEach(b=>{
+  b.addEventListener("click", ()=>{ lang = b.dataset.lang; paint(); });
+});
+
+/* contact button appears only once a real link is set */
+const cta = document.getElementById("cta");
+if(!CONTACT.href.startsWith("REPLACE")){
+  cta.href = CONTACT.href;
+  if(CONTACT.href.startsWith("http")){ cta.target = "_blank"; cta.rel = "noopener"; }
+  cta.classList.add("on");
+}
+
+/* condensation */
+if(!reduced){
+  const drops = document.getElementById("drops");
+  for(let i=0;i<16;i++){
+    const d = document.createElement("i");
+    const w = 3 + Math.random()*7;
+    d.className = "drop";
+    d.style.cssText =
+      `left:${Math.random()*100}%;width:${w}px;height:${w*1.35}px;` +
+      `animation-duration:${9+Math.random()*13}s;animation-delay:${-Math.random()*18}s`;
+    drops.appendChild(d);
+  }
+  const bub = document.getElementById("bubbles");
+  for(let i=0;i<12;i++){
+    const b = document.createElement("i");
+    const w = 3 + Math.random()*6;
+    b.className = "bubble";
+    b.style.cssText =
+      `left:${Math.random()*100}%;width:${w}px;height:${w}px;` +
+      `animation-duration:${5+Math.random()*6}s;animation-delay:${-Math.random()*9}s`;
+    bub.appendChild(b);
+  }
+  setInterval(()=>{ idx = (idx+1) % FLAVOURS.length; paint(); }, 5200);
+}
+
+paint();
+</script>
+</body>
+</html>
