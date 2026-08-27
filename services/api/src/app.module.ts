@@ -3,6 +3,7 @@ import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule, seconds } from '@nestjs/throttler';
 import { AppConfigModule } from './common/config/config.module.js';
 import { AppConfigService } from './common/config/app-config.service.js';
+import { PrismaModule } from './common/prisma/prisma.module.js';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter.js';
 import { RequestIdMiddleware } from './common/http/request-id.middleware.js';
 import { HealthModule } from './health/health.module.js';
@@ -17,6 +18,7 @@ import { HealthModule } from './health/health.module.js';
 @Module({
   imports: [
     AppConfigModule,
+    PrismaModule,
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({

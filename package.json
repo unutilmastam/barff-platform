@@ -19,14 +19,24 @@
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "docker:logs": "docker compose logs -f"
+    "docker:logs": "docker compose logs -f",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"
   },
   "devDependencies": {
     "@barff/config": "workspace:*",
     "@eslint/js": "catalog:",
+    "@prisma/client": "^6.19.3",
+    "dotenv": "^17.2.3",
     "eslint": "catalog:",
     "eslint-config-prettier": "catalog:",
     "prettier": "catalog:",
+    "prisma": "^6.19.3",
+    "tsx": "^4.20.5",
     "turbo": "^2.5.9",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"

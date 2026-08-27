@@ -23,3 +23,9 @@ onlyBuiltDependencies:
   # @swc/core compiles the API's decorators for vitest; esbuild cannot emit
   # decorator metadata, which NestJS DI relies on.
   - '@swc/core'
+  # Prisma downloads its query engine binary; argon2 builds a native addon.
+  # Neither works without its install script.
+  - '@prisma/client'
+  - '@prisma/engines'
+  - prisma
+  - argon2

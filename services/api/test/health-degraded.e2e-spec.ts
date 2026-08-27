@@ -39,6 +39,14 @@ describe('health when dependencies are down (e2e)', () => {
     await app?.close();
   });
 
+  it('boots at all — an unreachable database must not stop the process starting', () => {
+    // Crashing on startup would turn a brief RDS blip during a deploy into
+    // every ECS task failing to start: a total outage instead of a degraded
+    // one. The readiness probe below is what removes the instance from
+    // rotation.
+    expect(app).toBeDefined();
+  });
+
   it('returns 503 and names the failing dependencies', async () => {
     const response = await request(app.getHttpServer()).get('/api/v1/health/ready').expect(503);
 
