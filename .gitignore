@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Test / coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Environment — never commit real values (CLAUDE.md §12)
+.env
+.env.*
+!.env.example
+
+# Secrets / keys
+*.pem
+*.key
+*.p12
+secrets/
+
+# Generated media derivatives (ASSETS.md — produced by the S08 pipeline)
+assets/**/generated/
+public/media/generated/
+
+# Local infrastructure state
+.docker-data/
+*.tfstate
+*.tfstate.*
+.terraform/
+cdk.out/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# NOTE: assets/ is source-controlled on purpose (see ASSETS.md).
