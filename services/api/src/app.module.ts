@@ -4,6 +4,12 @@ import { ThrottlerGuard, ThrottlerModule, seconds } from '@nestjs/throttler';
 import { AppConfigModule } from './common/config/config.module.js';
 import { AppConfigService } from './common/config/app-config.service.js';
 import { PrismaModule } from './common/prisma/prisma.module.js';
+import { RedisModule } from './common/redis/redis.module.js';
+import { AuditModule } from './common/audit/audit.module.js';
+import { AuthModule } from './auth/auth.module.js';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from './auth/guards/roles.guard.js';
+import { PermissionsGuard } from './auth/guards/permissions.guard.js';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter.js';
 import { RequestIdMiddleware } from './common/http/request-id.middleware.js';
 import { HealthModule } from './health/health.module.js';
@@ -19,6 +25,9 @@ import { HealthModule } from './health/health.module.js';
   imports: [
     AppConfigModule,
     PrismaModule,
+    RedisModule,
+    AuditModule,
+    AuthModule,
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({
@@ -42,7 +51,15 @@ import { HealthModule } from './health/health.module.js';
       }),
     },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
+
+    // Guard order matters and follows the order they are listed here:
+    // throttle before authenticating (so an unauthenticated flood is cheap),
+    // authenticate before authorizing (roles and permissions need a user), and
+    // roles before permissions (the coarser check first).
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
   ],
 })
 export class AppModule implements NestModule {

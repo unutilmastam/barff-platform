@@ -1,6 +1,7 @@
 import { type INestApplication, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { AppConfigService } from './common/config/app-config.service.js';
 
 /**
@@ -14,6 +15,10 @@ import { AppConfigService } from './common/config/app-config.service.js';
 export function configureApp(app: INestApplication, config: AppConfigService): void {
   app.setGlobalPrefix(config.globalPrefix);
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
+
+  // Must run before the guards: JwtAuthGuard reads the access token from
+  // `request.cookies`, which does not exist until this parses the header.
+  app.use(cookieParser());
 
   app.use(
     helmet({

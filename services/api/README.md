@@ -86,6 +86,58 @@ controller. Hammering an unknown path returns 404s forever and never trips the
 limit — that is Nest's design, but it makes "I tested it against /nope" a
 misleading way to verify throttling.
 
+## Auth and RBAC
+
+`POST /auth/login` · `POST /auth/refresh` · `POST /auth/logout` · `GET /auth/me`
+
+**Deny by default.** `JwtAuthGuard` is global; a route is reachable without a
+token only if it says `@Public()`. Guarding each controller individually fails
+silently the first time someone forgets, and nothing notices an unguarded
+endpoint unless a test was written for it specifically.
+
+**Tokens.** A short-lived access token (15 min) carries the user's roles and
+permissions; a long-lived refresh token carries neither, so it grants no
+authority of its own. They are signed with **different secrets** — sharing one
+would make a refresh token a valid access token and the short access lifetime
+would buy nothing. The env schema refuses to start if they match.
+
+**Rotation and reuse detection.** Refreshing consumes the presented token and
+issues a new one. If an already-rotated token appears again, the token leaked —
+and the server cannot tell the thief from the user, so the whole session family
+is revoked and both re-authenticate. Losing a session is much cheaper than
+leaving a live stolen credential in circulation.
+
+**Cookies, and why the body is usually empty.** Login sets HttpOnly, SameSite=Lax
+cookies; the refresh cookie is scoped to `/api/v1/auth/refresh`, since it is the
+account-takeover credential and should not ride along on every request. Tokens
+appear in the response body **only** when the client sends
+`X-Token-Delivery: body` — the driver PWA needs raw tokens for its offline
+queue. A browser that never sees the token in a readable body cannot be talked
+into putting it in `localStorage`, which is the entire point of the HttpOnly
+cookie.
+
+**No user enumeration.** Unknown account, wrong password, locked account and
+deactivated account all return the same 401 with the same message and code. The
+unknown-account path still runs a hash so it does not answer measurably faster —
+otherwise response timing reopens the hole the identical message just closed.
+The audit log records what actually happened.
+
+**Two-layer login throttle.** Per-IP (10/min on `/auth/login`) and per-account
+(`failedLoginAttempts` / `lockedUntil`). Neither alone is enough: IP-only is
+beaten by a botnet, account-only by spraying one password across thousands of
+accounts.
+
+**Authorization.** `@Roles()` and `@Permissions()`; prefer permissions, since
+roles change shape as the business grows. `@Permissions()` requires _all_
+listed keys. Refusals never name the missing role or permission — probing
+endpoints should not yield a map of the permission model.
+
+Known trade-off: permissions ride in the signed access token, so a revoked
+permission stays usable until that token expires (≤15 min). Refreshing re-reads
+them from the database, and revoking the session cuts it short immediately. The
+alternative — a lookup per request — buys instant revocation at the price of
+making every authenticated request depend on another service being up.
+
 ## Tests
 
 ```bash

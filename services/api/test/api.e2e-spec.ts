@@ -7,6 +7,7 @@ import { leadCreateSchema } from '@barff/validation';
 import { AppModule } from '../src/app.module.js';
 import { AppConfigService } from '../src/common/config/app-config.service.js';
 import { buildSwaggerDocument, configureApp, docsPath, setupSwagger } from '../src/bootstrap.js';
+import { Public } from '../src/auth/decorators/public.decorator.js';
 import { SortableQueryDto } from '../src/common/dto/sort-query.dto.js';
 import { zodBody } from '../src/common/pipes/zod-validation.pipe.js';
 
@@ -22,6 +23,10 @@ class ProbeQueryDto extends SortableQueryDto(['name', 'createdAt'] as const, 'cr
 
 @ApiTags('probe')
 @Controller({ path: 'probe', version: '1' })
+// Public: these tests cover the pipes and the DTO helpers. From S04 the API
+// denies by default, so an unauthenticated probe would 401 before reaching
+// anything under test — RBAC has its own suite.
+@Public()
 class ProbeController {
   @Get()
   list(@Query() query: ProbeQueryDto) {

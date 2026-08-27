@@ -4,6 +4,8 @@ import { validateEnv } from './env.schema.js';
 const minimalEnv = {
   DATABASE_URL: 'postgresql://barff:pw@localhost:5432/barff',
   REDIS_URL: 'redis://localhost:6379',
+  JWT_ACCESS_SECRET: 'an-access-secret-of-at-least-32-characters',
+  JWT_REFRESH_SECRET: 'a-refresh-secret-of-at-least-32-characters',
 };
 
 describe('validateEnv', () => {
@@ -17,8 +19,44 @@ describe('validateEnv', () => {
   });
 
   it('fails fast when a required variable is missing', () => {
-    expect(() => validateEnv({ REDIS_URL: 'redis://localhost:6379' })).toThrow(/DATABASE_URL/);
-    expect(() => validateEnv({ DATABASE_URL: minimalEnv.DATABASE_URL })).toThrow(/REDIS_URL/);
+    const { DATABASE_URL: _db, ...withoutDatabase } = minimalEnv;
+    const { REDIS_URL: _redis, ...withoutRedis } = minimalEnv;
+    expect(() => validateEnv(withoutDatabase)).toThrow(/DATABASE_URL/);
+    expect(() => validateEnv(withoutRedis)).toThrow(/REDIS_URL/);
+  });
+
+  it('requires both JWT secrets — there is no development fallback', () => {
+    // A default secret is how a placeholder reaches production and every token
+    // becomes forgeable. Refusing to start is the cheaper failure.
+    const { JWT_ACCESS_SECRET: _a, ...withoutAccess } = minimalEnv;
+    const { JWT_REFRESH_SECRET: _r, ...withoutRefresh } = minimalEnv;
+    expect(() => validateEnv(withoutAccess)).toThrow(/JWT_ACCESS_SECRET/);
+    expect(() => validateEnv(withoutRefresh)).toThrow(/JWT_REFRESH_SECRET/);
+  });
+
+  it('rejects a JWT secret that is too short for HS256', () => {
+    expect(() => validateEnv({ ...minimalEnv, JWT_ACCESS_SECRET: 'short' })).toThrow(/at least 32/);
+  });
+
+  it('rejects reusing one secret for both token types', () => {
+    // Sharing a key makes a refresh token a valid access token, and the short
+    // access lifetime buys nothing.
+    expect(() =>
+      validateEnv({ ...minimalEnv, JWT_REFRESH_SECRET: minimalEnv.JWT_ACCESS_SECRET }),
+    ).toThrow(/must differ/);
+  });
+
+  it('refuses insecure cookies in production', () => {
+    expect(() =>
+      validateEnv({ ...minimalEnv, NODE_ENV: 'production', COOKIE_SECURE: 'false' }),
+    ).toThrow(/COOKIE_SECURE/);
+  });
+
+  it('applies the auth defaults', () => {
+    const env = validateEnv({ ...minimalEnv });
+    expect(env.JWT_ACCESS_TTL).toBe(900);
+    expect(env.LOGIN_MAX_ATTEMPTS).toBe(5);
+    expect(env.COOKIE_SECURE).toBe(true);
   });
 
   it('reports every problem at once, not one per restart', () => {
