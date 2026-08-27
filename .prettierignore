@@ -1,0 +1,15 @@
+node_modules
+dist
+build
+.next
+.turbo
+coverage
+pnpm-lock.yaml
+assets
+CHANGELOG-STEPS.md
+
+# Source-of-truth documents — client-owned, keep authored formatting
+CLAUDE.md
+ROADMAP.md
+ASSETS.md
+docs/OPEN-QUESTIONS.md

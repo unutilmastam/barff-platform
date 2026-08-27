@@ -66,7 +66,7 @@ then tick the checkbox and commit.
 Claude Code updates this list. `[x]` = done and merged.
 
 **Phase 0**
-- [ ] S00 Repo bootstrap
+- [x] S00 Repo bootstrap
 - [ ] S01 Shared packages skeleton
 - [ ] S02 NestJS API skeleton
 - [ ] S03 Prisma + core schema + seed

@@ -1,0 +1,81 @@
+# Local development infrastructure for BARFF.UZ.
+# Values here are development-only. Production uses RDS / ElastiCache / S3 (CLAUDE.md §13).
+# Never point application code at a production database (§12).
+
+name: barff
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: barff-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-barff}
+      POSTGRES_USER: ${POSTGRES_USER:-barff}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-barff_dev_password}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-barff} -d ${POSTGRES_DB:-barff}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: barff-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: barff-minio
+    restart: unless-stopped
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-barff_minio}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-barff_minio_dev_password}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: creates the buckets the media pipeline (S08) expects.
+  # Private by default — public read is granted only to the CDN-fronted bucket.
+  minio-init:
+    image: minio/mc:latest
+    container_name: barff-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY_ID:-barff_minio} ${S3_SECRET_ACCESS_KEY:-barff_minio_dev_password} &&
+      mc mb --ignore-existing local/${S3_BUCKET:-barff-media} &&
+      mc mb --ignore-existing local/${S3_BUCKET_PUBLIC:-barff-public} &&
+      mc anonymous set download local/${S3_BUCKET_PUBLIC:-barff-public} &&
+      echo 'minio buckets ready'
+      "
+    restart: 'no'
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
