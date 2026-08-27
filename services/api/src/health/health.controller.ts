@@ -7,6 +7,7 @@ import {
 } from '@nestjs/swagger';
 import { HealthCheck, HealthCheckService, type HealthCheckResult } from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
+import { Public } from '../auth/decorators/public.decorator.js';
 import { PostgresHealthIndicator } from './indicators/postgres.health.js';
 import { RedisHealthIndicator } from './indicators/redis.health.js';
 
@@ -28,6 +29,9 @@ import { RedisHealthIndicator } from './indicators/redis.health.js';
 @ApiTags('health')
 @Controller({ path: 'health', version: '1' })
 @SkipThrottle()
+// Probes are unauthenticated: the load balancer and ECS have no credentials,
+// and a health endpoint that needs a token cannot report an auth outage.
+@Public()
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,

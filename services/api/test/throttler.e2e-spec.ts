@@ -11,6 +11,7 @@ vi.hoisted(() => {
   process.env['RATE_LIMIT_TTL'] = '60';
 });
 import { AppModule } from '../src/app.module.js';
+import { Public } from '../src/auth/decorators/public.decorator.js';
 import { AppConfigService } from '../src/common/config/app-config.service.js';
 import { configureApp } from '../src/bootstrap.js';
 
@@ -27,6 +28,10 @@ import { configureApp } from '../src/bootstrap.js';
  */
 @Controller({ path: 'limited', version: '1' })
 class LimitedController {
+  // Public because this test is about the throttler, not auth. From S04 the
+  // API denies by default, so without this the route answers 401 and never
+  // reaches the rate limit under test.
+  @Public()
   @Get()
   ping() {
     return { ok: true };

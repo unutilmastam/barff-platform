@@ -64,4 +64,29 @@ export class AppConfigService {
   get redisUrl(): string {
     return this.get('REDIS_URL');
   }
+
+  get jwt(): {
+    accessSecret: string;
+    refreshSecret: string;
+    accessTtlSeconds: number;
+    refreshTtlSeconds: number;
+  } {
+    return {
+      accessSecret: this.get('JWT_ACCESS_SECRET'),
+      refreshSecret: this.get('JWT_REFRESH_SECRET'),
+      accessTtlSeconds: this.get('JWT_ACCESS_TTL'),
+      refreshTtlSeconds: this.get('JWT_REFRESH_TTL'),
+    };
+  }
+
+  get cookie(): { domain: string | undefined; secure: boolean } {
+    return { domain: this.get('COOKIE_DOMAIN'), secure: this.get('COOKIE_SECURE') };
+  }
+
+  get loginThrottle(): { maxAttempts: number; lockoutSeconds: number } {
+    return {
+      maxAttempts: this.get('LOGIN_MAX_ATTEMPTS'),
+      lockoutSeconds: this.get('LOGIN_LOCKOUT_SECONDS'),
+    };
+  }
 }

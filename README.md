@@ -11,10 +11,10 @@ driver PWA and the API behind them.
 | [`docs/OPEN-QUESTIONS.md`](./docs/OPEN-QUESTIONS.md)   | Everything not yet confirmed by BARFF                              |
 | [`docs/CHANGELOG-STEPS.md`](./docs/CHANGELOG-STEPS.md) | One line per completed roadmap step                                |
 
-> **Current state:** step **S03 — Prisma core schema + seed**. The workspace, the four shared
-> packages, the API skeleton and the identity/authorization schema exist. There are still no
-> business endpoints — auth lands in S04. `apps/*` and `packages/ui` are empty placeholders,
-> filled in by S06–S07.
+> **Current state:** step **S04 — Auth + RBAC**. The workspace, the four shared packages, the
+> API skeleton, the identity schema and working authentication with server-side RBAC exist.
+> Business endpoints start in S09. `apps/*` and `packages/ui` are empty placeholders, filled in
+> by S06–S07.
 
 ---
 
