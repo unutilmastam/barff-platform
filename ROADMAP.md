@@ -72,7 +72,7 @@ Claude Code updates this list. `[x]` = done and merged.
 - [x] S03 Prisma + core schema + seed
 - [x] S04 Auth + RBAC
 - [x] S05 CI/CD pipeline + Docker
-- [ ] S06 Next.js web shell — **PHASE 0 GATE**
+- [x] S06 Next.js web shell — **PHASE 0 GATE**
 
 **Phase 1**
 - [ ] S07 Design system (`packages/ui`)

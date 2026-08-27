@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+/* Loads the BARFF design tokens from @barff/config (see tailwind.config.ts).
+   The tokens are TypeScript so one definition serves Tailwind, the API's PDF
+   exports and any future consumer — a CSS-only @theme block would duplicate
+   every value. */
+@config "../../tailwind.config.ts";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Motion is decoration, never the only way to understand content (§17).
+     This kills animation globally for anyone who asked for that at OS level —
+     including animations added later by GSAP in S16, which is why it belongs
+     here rather than in individual components. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    background-color: theme(colors.surface.base);
+    color: theme(colors.content.primary);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* A visible focus ring on every interactive element. Removing outlines makes
+     a site unusable by keyboard, and it is the single most common a11y
+     regression. */
+  :focus-visible {
+    outline: 2px solid theme(colors.brand.500);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Selection uses the brand accent rather than the browser default blue. */
+  ::selection {
+    background-color: theme(colors.brand.500);
+    color: theme(colors.content.inverse);
+  }
+}

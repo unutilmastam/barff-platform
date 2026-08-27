@@ -57,6 +57,10 @@ jobs:
       COOKIE_SECURE: 'false'
       SEED_ADMIN_EMAIL: ci-admin@barff.test
       SEED_ADMIN_PASSWORD: ci-admin-password-2026
+      # Inlined into the client bundle by Next at build time. Public by
+      # definition — never put a secret in a NEXT_PUBLIC_* variable.
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
 
     steps:
       - uses: actions/checkout@v4

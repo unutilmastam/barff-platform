@@ -1,0 +1,45 @@
+{
+  "common": {
+    "skipToContent": "Asosiy qismga o‘tish",
+    "loading": "Yuklanmoqda…",
+    "openMenu": "Menyuni ochish",
+    "closeMenu": "Menyuni yopish",
+    "language": "Til",
+    "switchLanguage": "Tilni o‘zgartirish"
+  },
+  "nav": {
+    "home": "Bosh sahifa",
+    "company": "Kompaniya",
+    "products": "Mahsulotlar",
+    "production": "Ishlab chiqarish",
+    "quality": "Sifat",
+    "partners": "Hamkorlar",
+    "news": "Yangiliklar",
+    "gallery": "Galereya",
+    "contact": "Aloqa",
+    "becomePartner": "Hamkor bo‘lish",
+    "primary": "Asosiy menyu",
+    "footer": "Sahifa oxiri menyusi"
+  },
+  "home": {
+    "title": "BARFF",
+    "tagline": "Ichimlik ishlab chiqaruvchi",
+    "shellNotice": "Sayt qurilmoqda. Bu — tuzilma va uslub asosi; mazmun keyingi bosqichlarda qo‘shiladi."
+  },
+  "footer": {
+    "rights": "Barcha huquqlar himoyalangan.",
+    "privacy": "Maxfiylik siyosati",
+    "terms": "Foydalanish shartlari"
+  },
+  "error": {
+    "title": "Xatolik yuz berdi",
+    "description": "Kutilmagan xatolik. Iltimos, qaytadan urinib ko‘ring.",
+    "retry": "Qaytadan urinish",
+    "reference": "Murojaat raqami"
+  },
+  "notFound": {
+    "title": "Sahifa topilmadi",
+    "description": "Siz izlagan sahifa mavjud emas yoki ko‘chirilgan.",
+    "backHome": "Bosh sahifaga qaytish"
+  }
+}

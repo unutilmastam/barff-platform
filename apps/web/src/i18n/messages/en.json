@@ -1,0 +1,45 @@
+{
+  "common": {
+    "skipToContent": "Skip to content",
+    "loading": "Loading…",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "language": "Language",
+    "switchLanguage": "Change language"
+  },
+  "nav": {
+    "home": "Home",
+    "company": "Company",
+    "products": "Products",
+    "production": "Production",
+    "quality": "Quality",
+    "partners": "Partners",
+    "news": "News",
+    "gallery": "Gallery",
+    "contact": "Contact",
+    "becomePartner": "Become a partner",
+    "primary": "Main menu",
+    "footer": "Footer menu"
+  },
+  "home": {
+    "title": "BARFF",
+    "tagline": "Beverage manufacturer",
+    "shellNotice": "Site under construction. This is the structure and visual foundation; content arrives in later steps."
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "privacy": "Privacy policy",
+    "terms": "Terms of use"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "retry": "Try again",
+    "reference": "Reference"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has moved.",
+    "backHome": "Back to home"
+  }
+}
