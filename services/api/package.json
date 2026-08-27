@@ -49,5 +49,13 @@
     "typescript": "catalog:",
     "unplugin-swc": "^1.5.7",
     "vitest": "catalog:"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "argon2",
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma"
+    ]
   }
 }

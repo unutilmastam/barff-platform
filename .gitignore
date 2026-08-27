@@ -3,6 +3,7 @@ node_modules/
 .pnpm-store/
 
 # Build output
+services/api/generated/
 dist/
 build/
 out/

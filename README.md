@@ -11,10 +11,9 @@ driver PWA and the API behind them.
 | [`docs/OPEN-QUESTIONS.md`](./docs/OPEN-QUESTIONS.md)   | Everything not yet confirmed by BARFF                              |
 | [`docs/CHANGELOG-STEPS.md`](./docs/CHANGELOG-STEPS.md) | One line per completed roadmap step                                |
 
-> **Current state:** step **S04 — Auth + RBAC**. The workspace, the four shared packages, the
-> API skeleton, the identity schema and working authentication with server-side RBAC exist.
-> Business endpoints start in S09. `apps/*` and `packages/ui` are empty placeholders, filled in
-> by S06–S07.
+> **Current state:** step **S05 — CI/CD + Docker**. The workspace, the four shared packages,
+> the API with auth and RBAC, a production image and a CI pipeline exist. Business endpoints
+> start in S09. `apps/*` and `packages/ui` are empty placeholders, filled in by S06–S07.
 
 ---
 
@@ -179,6 +178,34 @@ would look like a wrong password rather than a configuration bug.
 - `assets/_needs-review/` is **not approved for production** — do not reference it anywhere.
 
 See [`ASSETS.md`](./ASSETS.md) for the full manifest and the known quality issues.
+
+## CI and images
+
+`.github/workflows/ci.yml` runs on every pull request and on `main`:
+`format:check → lint → typecheck → test → build`, against **real** Postgres and Redis service
+containers with migrations and the seed applied — the auth and RBAC suites assert against
+seeded roles and grants, so mocks would not prove anything. A second job builds the API image,
+starts it, requires `/api/v1/health/live` to answer, and fails if the container runs as root.
+
+Branch protection, required checks and the deployment secrets are documented in
+[`docs/BRANCH-PROTECTION.md`](./docs/BRANCH-PROTECTION.md).
+
+```bash
+pnpm docker:build:api    # docker build -f services/api/Dockerfile . (from the repo root)
+```
+
+The image is built **from the repository root**, not from `services/api`: the API depends on
+workspace packages and on `prisma/schema.prisma`, which a narrower context could not resolve.
+Base is Debian slim rather than Alpine because argon2 and Prisma both ship glibc prebuilds; on
+musl they would be compiled from source in every build, and a mismatched native binary fails at
+runtime rather than at build time.
+
+`infrastructure/docker/nextjs.Dockerfile` is a parameterised template for the four Next.js
+apps, unused until S06 creates `apps/web`. One template rather than four copies, so a base-image
+or CVE fix is applied once.
+
+`deploy-staging.yml` is a **skeleton** — the steps are real, the AWS resources are not. It
+refuses to run until S40 provisions them.
 
 ## Conventions
 

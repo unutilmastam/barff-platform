@@ -16,6 +16,7 @@ export const ignores = [
   '**/.turbo/**',
   '**/coverage/**',
   '**/*.generated.*',
+  '**/generated/**',
   'assets/**',
 ];
 

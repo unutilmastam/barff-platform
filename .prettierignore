@@ -20,3 +20,6 @@ prisma/migrations
 # Standalone "coming soon" page served by GitHub Pages (see CNAME).
 # Hand-authored and not part of the monorepo build — left exactly as uploaded.
 index.html
+
+# Prisma-generated client
+services/api/generated
