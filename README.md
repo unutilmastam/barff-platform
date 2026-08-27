@@ -11,9 +11,9 @@ driver PWA and the API behind them.
 | [`docs/OPEN-QUESTIONS.md`](./docs/OPEN-QUESTIONS.md)   | Everything not yet confirmed by BARFF                              |
 | [`docs/CHANGELOG-STEPS.md`](./docs/CHANGELOG-STEPS.md) | One line per completed roadmap step                                |
 
-> **Current state:** step **S05 — CI/CD + Docker**. The workspace, the four shared packages,
-> the API with auth and RBAC, a production image and a CI pipeline exist. Business endpoints
-> start in S09. `apps/*` and `packages/ui` are empty placeholders, filled in by S06–S07.
+> **Current state:** step **S06 — web shell (Phase 0 complete)**. The workspace, the four
+> shared packages, the API with auth and RBAC, CI/CD, and the public website shell exist.
+> Page content starts in S12; `packages/ui` is filled in by S07.
 
 ---
 
@@ -115,6 +115,15 @@ Three rules hold for everything under `packages/`:
 
 TypeScript path aliases (`@barff/types`, `@barff/ui`, …) are declared in `tsconfig.base.json`
 for root-level and app use; the packages themselves resolve each other through node_modules.
+
+## Web
+
+`apps/web` is the public website — Next.js App Router, Tailwind v4, three locales under
+`/uz`, `/ru`, `/en` with `uz` as the default. See its
+[README](./apps/web/README.md).
+
+Lighthouse accessibility is 100/100 on all three locales. No user-facing string lives in a
+component; the rule is enforced by a test rather than by review.
 
 ## API
 

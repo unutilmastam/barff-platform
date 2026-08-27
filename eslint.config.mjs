@@ -28,4 +28,13 @@ export default createBaseConfig([
       'no-console': 'off',
     },
   },
+  {
+    // `prisma/seed.ts` is a command-line script run by an operator. Its console
+    // output is the interface — a seed that reports nothing is worse, not
+    // tidier.
+    files: ['prisma/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
 ]);

@@ -1,0 +1,34 @@
+{
+  "name": "@barff/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "BARFF public website — barff.uz",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf .next dist .turbo coverage *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@barff/types": "workspace:*",
+    "@barff/utils": "workspace:*",
+    "@barff/validation": "workspace:*",
+    "@tanstack/react-query": "^5.90.2",
+    "next": "^15.5.4",
+    "next-intl": "^4.3.11",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@barff/config": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^22.18.1",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "tailwindcss": "^4.1.13",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
