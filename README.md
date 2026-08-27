@@ -11,9 +11,10 @@ driver PWA and the API behind them.
 | [`docs/OPEN-QUESTIONS.md`](./docs/OPEN-QUESTIONS.md)   | Everything not yet confirmed by BARFF                              |
 | [`docs/CHANGELOG-STEPS.md`](./docs/CHANGELOG-STEPS.md) | One line per completed roadmap step                                |
 
-> **Current state:** step **S01 — Shared packages skeleton**. The workspace, tooling, local
-> infrastructure and the four shared packages exist. `apps/*`, `services/api` and `packages/ui`
-> are still empty placeholders, filled in by S02–S07.
+> **Current state:** step **S02 — NestJS API skeleton**. The workspace, the four shared
+> packages and the API skeleton exist — config, logging, error handling, health, Swagger and
+> rate limiting, but no business endpoints yet. `apps/*` and `packages/ui` are still empty
+> placeholders, filled in by S06–S07.
 
 ---
 
@@ -113,6 +114,22 @@ Three rules hold for everything under `packages/`:
 
 TypeScript path aliases (`@barff/types`, `@barff/ui`, …) are declared in `tsconfig.base.json`
 for root-level and app use; the packages themselves resolve each other through node_modules.
+
+## API
+
+`services/api` is the NestJS modular monolith behind `api.barff.uz`, served under `/api/v1`.
+See its [README](./services/api/README.md) for how the skeleton fits together.
+
+| URL                    | What                                  |
+| ---------------------- | ------------------------------------- |
+| `/api/v1/health`       | Liveness + Postgres/Redis readiness   |
+| `/api/v1/health/live`  | Liveness only — touches no dependency |
+| `/api/v1/health/ready` | Readiness only                        |
+| `/api/v1/docs`         | Swagger UI — disabled in production   |
+
+Every failure returns `{ statusCode, message, code, requestId }`. Clients branch on `code`;
+`message` is human text that gets translated. Quote `requestId` when reporting a problem — it
+ties the response to the server logs.
 
 ## Assets
 

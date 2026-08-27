@@ -20,3 +20,6 @@ catalog:
 # pnpm 10 blocks lifecycle scripts unless they are listed here.
 onlyBuiltDependencies:
   - esbuild
+  # @swc/core compiles the API's decorators for vitest; esbuild cannot emit
+  # decorator metadata, which NestJS DI relies on.
+  - '@swc/core'
