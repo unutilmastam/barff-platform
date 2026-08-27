@@ -11,10 +11,10 @@ driver PWA and the API behind them.
 | [`docs/OPEN-QUESTIONS.md`](./docs/OPEN-QUESTIONS.md)   | Everything not yet confirmed by BARFF                              |
 | [`docs/CHANGELOG-STEPS.md`](./docs/CHANGELOG-STEPS.md) | One line per completed roadmap step                                |
 
-> **Current state:** step **S02 — NestJS API skeleton**. The workspace, the four shared
-> packages and the API skeleton exist — config, logging, error handling, health, Swagger and
-> rate limiting, but no business endpoints yet. `apps/*` and `packages/ui` are still empty
-> placeholders, filled in by S06–S07.
+> **Current state:** step **S03 — Prisma core schema + seed**. The workspace, the four shared
+> packages, the API skeleton and the identity/authorization schema exist. There are still no
+> business endpoints — auth lands in S04. `apps/*` and `packages/ui` are empty placeholders,
+> filled in by S06–S07.
 
 ---
 
@@ -31,6 +31,8 @@ corepack enable
 pnpm install
 cp .env.example .env    # then fill in local values — never commit .env
 pnpm docker:up          # postgres + redis + minio
+pnpm db:migrate         # apply migrations
+pnpm db:seed            # roles, permissions, settings, first admin
 ```
 
 ## Scripts
@@ -130,6 +132,42 @@ See its [README](./services/api/README.md) for how the skeleton fits together.
 Every failure returns `{ statusCode, message, code, requestId }`. Clients branch on `code`;
 `message` is human text that gets translated. Quote `requestId` when reporting a problem — it
 ties the response to the server logs.
+
+## Database
+
+Schema, migrations and seed live in `prisma/` at the repo root (`CLAUDE.md` §15), which is also
+Prisma's default location. `prisma.config.ts` wires them together — the `package.json#prisma`
+key it replaces is deprecated in Prisma 6 and removed in 7.
+
+Bringing a database up from nothing:
+
+```bash
+pnpm db:migrate:deploy   # or pnpm db:migrate to author a new migration
+pnpm db:seed
+```
+
+The seed is **idempotent** — every write is an upsert on a natural key, so running it twice
+changes nothing and it is safe on every deploy. Two things it deliberately does _not_ overwrite
+on a re-run:
+
+- an existing admin's password, because anyone able to trigger a deploy could otherwise reset
+  the administrator's credentials;
+- a `system_settings` value, because that would silently undo an admin's change.
+
+It seeds the six roles from `CLAUDE.md` §3 (keys taken from `@barff/types`, not retyped), a
+49-permission `resource:action` baseline, the role grants, four technical settings, and one
+admin user from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`. If those two are unset the admin is
+skipped with a warning and everything else still seeds — staging and production create their
+administrator out of band.
+
+Commercial values — minimum order quantity, dealer tiers, credit limits, delivery regions — are
+BARFF facts that have not been supplied, so they are absent rather than guessed. See
+`docs/OPEN-QUESTIONS.md`.
+
+Passwords are argon2id at the OWASP baseline. The parameters live in exactly one file,
+`services/api/src/common/crypto/password.ts`, because the seed writes the first hash and the S04
+auth service verifies it — if they drifted the seeded admin simply could not log in, and it
+would look like a wrong password rather than a configuration bug.
 
 ## Assets
 

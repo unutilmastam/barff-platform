@@ -1,61 +1,39 @@
-import { Injectable, type OnModuleDestroy } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HealthIndicatorService, type HealthIndicatorResult } from '@nestjs/terminus';
-import { Pool } from 'pg';
-import { AppConfigService } from '../../common/config/app-config.service.js';
+import { PrismaService } from '../../common/prisma/prisma.service.js';
 
 /**
  * Readiness probe for PostgreSQL.
  *
- * A real round-trip (`SELECT 1`), not a TCP connect: a socket that opens but
- * cannot authenticate or reach the database is exactly the failure a readiness
- * probe exists to catch.
+ * Uses the application's own Prisma connection pool rather than a second one:
+ * a probe that opens its own connection can report "up" while the pool the
+ * requests actually use is exhausted — which is precisely the outage readiness
+ * is supposed to catch.
  *
- * The pool is tiny and short-timeout on purpose — this connection exists to
- * answer a probe, not to serve traffic. From S03 the application talks to
- * Postgres through Prisma, and this indicator moves to `prisma.$queryRaw`;
- * `pg` then leaves the dependency list.
+ * (S02 used a one-connection `pg` pool as a placeholder until Prisma existed.
+ * `pg` has been removed from the dependency list.)
  */
 @Injectable()
-export class PostgresHealthIndicator implements OnModuleDestroy {
-  private pool: Pool | undefined;
-
+export class PostgresHealthIndicator {
   constructor(
     private readonly healthIndicatorService: HealthIndicatorService,
-    private readonly config: AppConfigService,
+    private readonly prisma: PrismaService,
   ) {}
-
-  private getPool(): Pool {
-    this.pool ??= new Pool({
-      connectionString: this.config.databaseUrl,
-      max: 1,
-      // Fail the probe rather than let a hung connection hold the event loop.
-      connectionTimeoutMillis: 3000,
-      idleTimeoutMillis: 10_000,
-      allowExitOnIdle: true,
-    });
-    return this.pool;
-  }
 
   async isHealthy(key = 'database'): Promise<HealthIndicatorResult> {
     const indicator = this.healthIndicatorService.check(key);
     const startedAt = Date.now();
 
     try {
-      await this.getPool().query('SELECT 1');
+      await this.prisma.ping();
       return indicator.up({ responseTimeMs: Date.now() - startedAt });
     } catch (error) {
-      // The message can name a host or a database — fine for an operator
-      // reading a probe, and it is never returned to a public client because
-      // /health is not exposed through Cloudflare.
+      // The message can name a host or database — fine for an operator reading
+      // a probe, and /health is not exposed publicly through Cloudflare.
       return indicator.down({
         responseTimeMs: Date.now() - startedAt,
         message: error instanceof Error ? error.message : 'Unknown database error',
       });
     }
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    await this.pool?.end();
-    this.pool = undefined;
   }
 }

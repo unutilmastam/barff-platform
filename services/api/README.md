@@ -11,6 +11,7 @@ NestJS modular monolith behind `api.barff.uz`. Base path: `/api/v1`.
 ```bash
 pnpm docker:up                       # postgres + redis (from the repo root)
 cp ../../.env.example .env           # then fill in DATABASE_URL and REDIS_URL
+pnpm db:migrate && pnpm db:seed      # from the repo root
 pnpm --filter @barff/api dev
 ```
 
@@ -99,11 +100,23 @@ it as the transformer.
 (reserved, never listening) rather than stopping the real services, so the suite
 stays self-contained.
 
+**Database.** `PrismaService` extends `PrismaClient` and is provided globally.
+Repositories live in their feature module — controllers never talk to Prisma
+directly (§11). The schema is at `prisma/` in the repo root.
+
+A failed connection at startup is **logged, not thrown**. A malformed
+`DATABASE_URL` is a configuration error and the env schema already refuses to
+start for it; an unreachable database is an operational condition, and crashing
+would turn a brief RDS blip during a deploy into every task failing to start —
+a total outage instead of a degraded one. Readiness reports `down`, the load
+balancer stops routing, and Prisma reconnects on the next query.
+
+The readiness probe now shares that pool rather than opening its own. A probe
+with a private connection can report "up" while the pool serving requests is
+exhausted, which is precisely the outage it should catch.
+
 ## Notes for later steps
 
-- `PostgresHealthIndicator` uses a one-connection `pg` pool. From **S03** the
-  application talks to Postgres through Prisma and this moves to
-  `prisma.$queryRaw`; `pg` then leaves the dependency list.
 - Swagger is disabled in production: the endpoint list is a map of the attack
   surface and BARFF has no third-party API consumers. Staging keeps it.
 - The structured logger is deliberately not pino. The requirement is redaction
