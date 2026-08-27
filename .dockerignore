@@ -1,0 +1,36 @@
+# Everything the build does not need. Keeping this tight is not just about
+# image size — a fat build context is uploaded to the daemon on every build,
+# and node_modules alone is hundreds of megabytes.
+**/node_modules
+**/dist
+**/build
+**/.next
+**/.turbo
+**/coverage
+**/*.tsbuildinfo
+
+.git
+.github
+assets
+docs
+infrastructure
+
+# Never ship secrets into a build context (CLAUDE.md §12).
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+*.pem
+*.key
+
+Dockerfile
+**/Dockerfile
+.dockerignore
+docker-compose.yml
+README.md
+**/README.md
+CLAUDE.md
+ROADMAP.md
+ASSETS.md
+index.html

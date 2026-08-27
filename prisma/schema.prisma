@@ -14,6 +14,17 @@
 
 generator client {
   provider = "prisma-client-js"
+
+  // Explicit, and inside the service that consumes it, for two reasons.
+  //
+  // 1. Packaging. The default output lands in a pnpm virtual-store path that
+  //    `pnpm deploy --prod` does not carry, so the production image started
+  //    with "Cannot find module '.prisma/client/default'". Generating into the
+  //    service directory means the artifact is copied with the package.
+  // 2. Prisma deprecates the default output in 6 and removes it in 7.
+  //
+  // Generated code, never committed — see .gitignore. Run `pnpm db:generate`.
+  output = "../services/api/generated/prisma"
 }
 
 datasource db {

@@ -11,7 +11,7 @@
  * lists) are business facts BARFF has not supplied and stay out until they do —
  * see docs/OPEN-QUESTIONS.md.
  */
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../services/api/generated/prisma/index.js';
 import { Role as RoleKey } from '@barff/types';
 import { hashPassword } from '../services/api/src/common/crypto/password.js';
 

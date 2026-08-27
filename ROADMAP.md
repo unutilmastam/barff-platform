@@ -71,7 +71,7 @@ Claude Code updates this list. `[x]` = done and merged.
 - [x] S02 NestJS API skeleton
 - [x] S03 Prisma + core schema + seed
 - [x] S04 Auth + RBAC
-- [ ] S05 CI/CD pipeline + Docker
+- [x] S05 CI/CD pipeline + Docker
 - [ ] S06 Next.js web shell — **PHASE 0 GATE**
 
 **Phase 1**

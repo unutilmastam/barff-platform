@@ -1,0 +1,173 @@
+name: Deploy to staging
+
+# SKELETON. The steps are real, but the AWS side does not exist yet — the ECR
+# repository, ECS cluster, task definitions and the OIDC role are created in
+# S40. Until then every run stops at the configuration check below rather than
+# failing halfway through with a confusing AWS error.
+#
+# Deliberately manual (`workflow_dispatch`) rather than on push to main:
+# automatic deploys are a decision to make once staging exists and CI is
+# trusted, not a default to inherit from a skeleton.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm'
+        required: true
+        default: ''
+
+concurrency:
+  # Never run two deploys at the same environment at once — the second would
+  # race the first's ECS rollout.
+  group: deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  # OIDC: GitHub exchanges a short-lived token for an AWS role. No long-lived
+  # access keys are stored as repo secrets — a leaked static key is valid until
+  # somebody notices, a leaked OIDC token expires in minutes (CLAUDE.md §12).
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+
+jobs:
+  preflight:
+    name: Check configuration
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - name: Confirm intent
+        if: ${{ github.event.inputs.confirm != 'deploy' }}
+        run: |
+          echo "Refusing: type 'deploy' to confirm."
+          exit 1
+
+      - id: check
+        name: Is the AWS side provisioned?
+        run: |
+          missing=""
+          [ -z "${{ vars.AWS_REGION }}" ]        && missing="$missing AWS_REGION"
+          [ -z "${{ vars.ECR_REPOSITORY }}" ]    && missing="$missing ECR_REPOSITORY"
+          [ -z "${{ vars.ECS_CLUSTER }}" ]       && missing="$missing ECS_CLUSTER"
+          [ -z "${{ vars.ECS_SERVICE }}" ]       && missing="$missing ECS_SERVICE"
+          [ -z "${{ secrets.AWS_DEPLOY_ROLE_ARN }}" ] && missing="$missing AWS_DEPLOY_ROLE_ARN"
+
+          if [ -n "$missing" ]; then
+            echo "Not configured yet. Missing:$missing"
+            echo "The AWS infrastructure is created in ROADMAP step S40."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push:
+    name: Build and push to ECR
+    needs: preflight
+    if: needs.preflight.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 30
+    outputs:
+      image: ${{ steps.push.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: push
+        name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/api/Dockerfile
+          push: true
+          # Tagged by commit SHA, not `latest`: a rollback has to name an exact
+          # build, and "latest" cannot be rolled back to.
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:staging
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - run: |
+          echo "image=${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+  migrate:
+    name: Apply database migrations
+    needs: [preflight, build-and-push]
+    if: needs.preflight.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Migrations run as a one-off ECS task inside the VPC, not from this
+      # runner: RDS lives in a private subnet (§13) and a GitHub-hosted runner
+      # cannot reach it — nor should it be able to.
+      #
+      # Before the service is updated, so the new code never meets an old
+      # schema. This requires migrations to be backwards-compatible with the
+      # running version for the length of the rollout; expand-then-contract, and
+      # a destructive change is two deploys, never one.
+      - name: Run `prisma migrate deploy` as a one-off task
+        run: |
+          echo "TODO(S40): aws ecs run-task with the migration task definition"
+          echo "  cluster:  ${{ env.ECS_CLUSTER }}"
+          echo "  image:    ${{ needs.build-and-push.outputs.image }}"
+          echo "  command:  pnpm db:migrate:deploy"
+          echo "Then poll the task until it exits, and fail this job on a non-zero exit code."
+
+  deploy:
+    name: Update the ECS service
+    needs: [preflight, build-and-push, migrate]
+    if: needs.preflight.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Application secrets are never passed here. The task definition
+      # references AWS Secrets Manager ARNs and ECS injects them at container
+      # start, so no secret value passes through GitHub (§12).
+      - name: Register the new task definition revision and update the service
+        run: |
+          echo "TODO(S40): render the task definition with the new image and"
+          echo "           aws ecs update-service --force-new-deployment"
+          echo "  image:   ${{ needs.build-and-push.outputs.image }}"
+          echo "  service: ${{ env.ECS_SERVICE }}"
+
+      - name: Wait for the deployment to stabilise
+        run: |
+          echo "TODO(S40): aws ecs wait services-stable"
+          echo "A deploy is not done when the API returns 200 — it is done when"
+          echo "the rollout completes and no task is still cycling."
+
+      - name: Smoke test staging
+        run: |
+          echo "TODO(S40): curl https://api-staging.barff.uz/api/v1/health and require status=ok"

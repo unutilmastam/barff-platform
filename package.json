@@ -25,7 +25,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:reset": "prisma migrate reset",
     "db:seed": "prisma db seed",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "docker:build:api": "docker build -f services/api/Dockerfile -t barff-api:local ."
   },
   "devDependencies": {
     "@barff/config": "workspace:*",

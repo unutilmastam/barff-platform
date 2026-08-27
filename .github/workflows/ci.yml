@@ -1,0 +1,168 @@
+name: CI
+
+# Runs on every pull request and on main. The same job is what branch
+# protection requires, so "green on the PR" and "green on main" mean the same
+# checks passed.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push supersedes the run in flight for that branch. Never cancel main:
+# its runs are the record of what was actually verified before a merge.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # The API's e2e suite talks to real Postgres and Redis rather than mocks —
+    # readiness probes, refresh-token rotation and the seeded RBAC grants are
+    # only meaningfully tested against the real thing.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: barff
+          POSTGRES_PASSWORD: barff_ci_password
+          POSTGRES_DB: barff
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U barff -d barff"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://barff:barff_ci_password@localhost:5432/barff
+      REDIS_URL: redis://localhost:6379
+      COOKIE_SECURE: 'false'
+      SEED_ADMIN_EMAIL: ci-admin@barff.test
+      SEED_ADMIN_PASSWORD: ci-admin-password-2026
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # --frozen-lockfile: CI installs exactly what was reviewed. A lockfile
+      # quietly updated mid-run is a dependency change nobody approved.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Generated per run rather than stored as repo secrets: these are
+      # throwaway values for an ephemeral database, and committing a literal
+      # would teach the wrong habit and eventually be copied into a real
+      # environment.
+      - name: Generate ephemeral JWT secrets
+        run: |
+          echo "JWT_ACCESS_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "JWT_REFRESH_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      # The auth and RBAC suites assert against the seeded roles and grants, so
+      # the schema and seed have to be applied before tests run.
+      - name: Apply migrations
+        run: pnpm db:migrate:deploy
+
+      - name: Seed
+        run: pnpm db:seed
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  docker:
+    name: Build API image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Built but not pushed: a pull request must never publish an artifact.
+      # Pushing to ECR is the deploy workflow's job, and only from main.
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/api/Dockerfile
+          push: false
+          load: true
+          tags: barff-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Proves the image starts and its entrypoint resolves. It has no database
+      # here, so /health/live is the right probe — it deliberately touches no
+      # dependency, which is exactly why it exists.
+      - name: Smoke test the image
+        run: |
+          docker run -d --name barff-api-ci \
+            -e NODE_ENV=production \
+            -e DATABASE_URL=postgresql://unused:unused@127.0.0.1:5432/unused \
+            -e REDIS_URL=redis://127.0.0.1:6379 \
+            -e JWT_ACCESS_SECRET="$(openssl rand -hex 32)" \
+            -e JWT_REFRESH_SECRET="$(openssl rand -hex 32)" \
+            -p 4000:4000 barff-api:ci
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4000/api/v1/health/live > /dev/null; then
+              echo "API image is live"
+              docker rm -f barff-api-ci
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "API image did not become live in time"
+          docker logs barff-api-ci
+          docker rm -f barff-api-ci
+          exit 1
+
+      # A container running as root turns a process escape into host access.
+      - name: Assert the image does not run as root
+        run: |
+          uid=$(docker run --rm --entrypoint id barff-api:ci -u)
+          echo "container uid: $uid"
+          if [ "$uid" = "0" ]; then
+            echo "image runs as root — refusing"
+            exit 1
+          fi
