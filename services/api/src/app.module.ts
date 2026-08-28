@@ -14,6 +14,7 @@ import { AllExceptionsFilter } from './common/http/all-exceptions.filter.js';
 import { RequestIdMiddleware } from './common/http/request-id.middleware.js';
 import { HealthModule } from './health/health.module.js';
 import { MediaModule } from './media/media.module.js';
+import { ProductsModule } from './products/products.module.js';
 
 /**
  * Root module.
@@ -30,6 +31,7 @@ import { MediaModule } from './media/media.module.js';
     AuditModule,
     AuthModule,
     MediaModule,
+    ProductsModule,
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({

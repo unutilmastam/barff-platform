@@ -14,6 +14,7 @@
 import { PrismaClient } from '../services/api/generated/prisma/index.js';
 import { Role as RoleKey } from '@barff/types';
 import { hashPassword } from '../services/api/src/common/crypto/password.js';
+import { mockProductsRequested, seedMockProducts } from './seed-mock-products.js';
 
 const prisma = new PrismaClient();
 
@@ -91,6 +92,11 @@ const PERMISSION_DEFINITIONS: { resource: string; action: string; description: s
   { resource: 'dealers', action: 'approve', description: 'Approve or reject a registration' },
 
   { resource: 'products', action: 'read', description: 'View products' },
+  {
+    resource: 'products',
+    action: 'read_all',
+    description: 'View products including unpublished drafts (admin catalogue)',
+  },
   { resource: 'products', action: 'create', description: 'Create products' },
   { resource: 'products', action: 'update', description: 'Update products' },
   { resource: 'products', action: 'delete', description: 'Remove products' },
@@ -166,6 +172,7 @@ const ROLE_PERMISSIONS: Record<RoleKey, string[]> = {
     'dealers:approve',
     'orders:read',
     'products:read',
+    'products:read_all',
     'pricing:read',
     'invoices:read',
     'payments:read',
@@ -180,6 +187,7 @@ const ROLE_PERMISSIONS: Record<RoleKey, string[]> = {
     'orders:read',
     'orders:update_status',
     'products:read',
+    'products:read_all',
   ],
 
   [RoleKey.LOGISTICS]: [
@@ -407,6 +415,14 @@ async function main(): Promise<void> {
 
   const adminEmail = await seedAdminUser(roleIds);
   console.info(`  admin user:   ${adminEmail ?? 'skipped (no SEED_ADMIN_* env)'}`);
+
+  // Opt-in, and never in production. See prisma/seed-mock-products.ts.
+  if (mockProductsRequested()) {
+    const products = await seedMockProducts(prisma);
+    console.info(`  MOCK products: ${products}`);
+  } else {
+    console.info('  MOCK products: skipped (set SEED_MOCK_PRODUCTS=true for local development)');
+  }
 
   console.info('Seed complete.');
 }

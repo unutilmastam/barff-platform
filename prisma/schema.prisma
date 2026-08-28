@@ -172,6 +172,220 @@ model RolePermission {
 }
 
 // ---------------------------------------------------------------------------
+// Products
+// ---------------------------------------------------------------------------
+//
+// Localized text is stored as JSON shaped `{ uz, ru, en }` — the `LocalizedText`
+// type in `@barff/types`. A column per language would mean a migration every
+// time a language is added, and a join table would turn every product read into
+// a second query for text that is always wanted.
+
+enum ProductDocumentKind {
+  CERTIFICATE
+  SPECIFICATION
+  SAFETY_DATA
+  OTHER
+
+  @@map("product_document_kind")
+}
+
+/// A grouping shown in navigation and used to filter `/products`.
+model ProductCategory {
+  id String @id @default(uuid()) @db.Uuid
+
+  slug        String @unique
+  /// Localized `{ uz, ru, en }`.
+  name        Json
+  description Json?
+
+  /// Self-relation for sub-categories. One level is expected; the schema does
+  /// not enforce a depth, because nothing yet says what the real taxonomy is.
+  parentId String?           @map("parent_id") @db.Uuid
+  parent   ProductCategory?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children ProductCategory[] @relation("CategoryTree")
+
+  displayOrder Int     @default(0) @map("display_order")
+  isActive     Boolean @default(true) @map("is_active")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  products Product[]
+
+  @@index([isActive, displayOrder])
+  @@map("product_categories")
+}
+
+/// A product family — "pomegranate juice" — independent of the size it is sold in.
+model Product {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// URL segment for `/products/[slug]`. Unique and indexed (CLAUDE.md §10).
+  /// Never changes once published: an edit breaks every existing link.
+  slug String @unique
+
+  categoryId String?          @map("category_id") @db.Uuid
+  category   ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  /// Localized `{ uz, ru, en }`.
+  name             Json
+  shortDescription Json? @map("short_description")
+  description      Json?
+  /// ⚠ Legally required on the page if published, and not yet supplied by
+  /// BARFF (docs/OPEN-QUESTIONS.md → Q-016). Nullable so nothing has to be
+  /// invented to create a row.
+  ingredients      Json?
+  storage          Json?
+
+  /// Free text, not an enum: the flavour list is not settled, and an enum
+  /// would need a migration per new juice.
+  flavor String?
+
+  /// ⚠ Q-016. Days from production.
+  shelfLifeDays Int? @map("shelf_life_days")
+
+  /// Per-page SEO overrides `{ title, description }` per locale. S15 owns the
+  /// defaults; this is only where an editor overrides them.
+  seo Json?
+
+  /// Draft by default. A product becomes visible on the public site only when
+  /// somebody deliberately publishes it — the opposite default would put
+  /// half-entered rows on barff.uz.
+  isActive     Boolean   @default(false) @map("is_active")
+  publishedAt  DateTime? @map("published_at")
+  displayOrder Int       @default(0) @map("display_order")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  /// Soft delete: orders reference variants, so a hard delete would orphan
+  /// order history.
+  deletedAt DateTime? @map("deleted_at")
+
+  variants  ProductVariant[]
+  images    ProductImage[]
+  documents ProductDocument[]
+
+  @@index([isActive, displayOrder])
+  @@index([categoryId])
+  @@map("products")
+}
+
+/// A sellable unit — one volume of one product.
+model ProductVariant {
+  id String @id @default(uuid()) @db.Uuid
+
+  productId String  @map("product_id") @db.Uuid
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  /// CLAUDE.md §10 asks for an index on `products.sku`. It lives here instead:
+  /// a SKU identifies a sellable unit, so a product sold in 350 ml and 1 L has
+  /// two of them. On `products` the second one would have nowhere to go.
+  ///
+  /// ⚠ Nullable until BARFF supplies the real codes (Q-016).
+  sku     String? @unique
+  barcode String? @unique
+
+  volumeMl Int  @map("volume_ml")
+  /// Units per case, for dealer ordering. ⚠ Q-006.
+  packSize Int? @map("pack_size")
+
+  /// Nutrition per 100 ml, localized labels resolved at render time. ⚠ Q-016.
+  nutrition Json?
+
+  isActive     Boolean @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  prices ProductPrice[]
+
+  @@index([productId, displayOrder])
+  @@map("product_variants")
+}
+
+/// Ordered gallery entry pointing at a `MediaAsset`.
+model ProductImage {
+  id String @id @default(uuid()) @db.Uuid
+
+  productId String  @map("product_id") @db.Uuid
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  /// Restricted rather than cascaded: deleting a media asset that a product
+  /// still shows should fail loudly, not silently empty the gallery.
+  mediaAssetId String     @map("media_asset_id") @db.Uuid
+  mediaAsset   MediaAsset @relation("ProductImages", fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  /// Overrides the asset's own alt text where the product needs something more
+  /// specific than the library entry.
+  altText Json? @map("alt_text")
+
+  /// Exactly one primary image per product, enforced by the service.
+  isPrimary    Boolean @default(false) @map("is_primary")
+  displayOrder Int     @default(0) @map("display_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([productId, mediaAssetId])
+  @@index([productId, displayOrder])
+  @@map("product_images")
+}
+
+/// Certificate or specification attached to a product.
+model ProductDocument {
+  id String @id @default(uuid()) @db.Uuid
+
+  productId String  @map("product_id") @db.Uuid
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  mediaAssetId String     @map("media_asset_id") @db.Uuid
+  mediaAsset   MediaAsset @relation("ProductDocuments", fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  kind  ProductDocumentKind @default(OTHER)
+  /// Localized `{ uz, ru, en }`.
+  title Json
+
+  displayOrder Int @default(0) @map("display_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([productId, mediaAssetId])
+  @@index([productId, displayOrder])
+  @@map("product_documents")
+}
+
+/// A price for a variant.
+///
+/// Deliberately minimal at this step. Dealer tiers, regional prices, volume
+/// discounts and promotions are the pricing engine's job (S23), and modelling
+/// them now would encode a commercial policy BARFF has not supplied (Q-006).
+model ProductPrice {
+  id String @id @default(uuid()) @db.Uuid
+
+  variantId String         @map("variant_id") @db.Uuid
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  /// Integer minor units — never a float. See `@barff/utils/money`.
+  amountMinor Int    @map("amount_minor")
+  currency    String @default("UZS") @db.VarChar(3)
+
+  /// Open-ended when null. Overlapping windows are resolved by S23's resolver,
+  /// which is the single place a price is ever computed.
+  validFrom DateTime  @default(now()) @map("valid_from")
+  validTo   DateTime? @map("valid_to")
+
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([variantId, isActive, validFrom])
+  @@map("product_prices")
+}
+
+// ---------------------------------------------------------------------------
 // Media
 // ---------------------------------------------------------------------------
 
@@ -236,6 +450,9 @@ model MediaAsset {
 
   uploadedById String? @map("uploaded_by_id") @db.Uuid
   uploadedBy   User?   @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  productImages    ProductImage[]    @relation("ProductImages")
+  productDocuments ProductDocument[] @relation("ProductDocuments")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")

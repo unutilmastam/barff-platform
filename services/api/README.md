@@ -177,6 +177,63 @@ at boot from configuration — no service branches on it — and production is
 prevented from selecting `filesystem` by the env schema, since the container
 disk is discarded on every deploy.
 
+## Products (§4, §10)
+
+Public: `GET /products` · `GET /products/categories` · `GET /products/:slug`.
+Admin: `/admin/products` and `/admin/product-categories`, plus variants, images
+and documents under a product.
+
+**The public controller is a separate class, not the admin one with a flag.**
+Its listing DTO has no `isActive` field at all, so a draft cannot be requested —
+not by a query parameter, not by a typo, not by someone who knows the column
+exists. `forbidNonWhitelisted` turns an attempt into a 400. A draft and a slug
+that never existed return the identical 404, because a different answer would
+confirm which products BARFF is preparing to launch.
+
+**Reads on the admin routes need `products:read_all`, not `products:read`.**
+Dealers hold `products:read` for the portal catalogue, and the admin listing
+returns unpublished rows; sharing one permission would have let any dealer
+account read the unannounced roadmap.
+
+**A product is a draft when created.** `isActive` defaults to false, and
+`publishedAt` is stamped once on the transition — re-saving a published product
+does not move its publication date. The slug is absent from the update DTO: it
+is the public URL, and renaming it silently breaks every link that exists.
+A slug also stays reserved after deletion, so it can never be handed to
+different content.
+
+**Deletes are soft**, for products, variants and categories alike: order history
+will reference variants, and a hard delete would orphan it. Deleting a variant
+releases its SKU and barcode so the codes can be reused on a replacement.
+Deleting a category is refused while products still belong to it.
+
+**A SKU lives on the variant, not the product** — a deviation from §10's
+`products.sku`. A SKU identifies a sellable unit, so a juice sold in 350 ml and
+1 L has two; on `products` the second would have nowhere to go.
+
+Ingredients, nutrition, shelf life, storage, SKU and barcode are all nullable
+and all unseeded: they are back-label facts BARFF has not supplied (Q-016) and
+are legally required to be correct on a published page. Prices are not modelled
+beyond a bare `product_prices` row — tiers, regions, volume discounts and
+promotions are the pricing engine's (S23, Q-006).
+
+### The MOCK catalogue
+
+`prisma/seed-mock-products.ts` seeds seven placeholder products, and only when
+`SEED_MOCK_PRODUCTS` is set:
+
+```bash
+SEED_MOCK_PRODUCTS=true pnpm db:seed
+```
+
+Setting it with `NODE_ENV=production` is a hard error. The seed runs on every
+deploy, so an unguarded fixture would put copy marked `MOCK —
+REPLACE_WITH_REAL_DATA` on barff.uz. Names and volumes come off the real label
+artwork (`ASSETS.md` §3); no regulated claim (_100% NATURAL_ and its neighbours,
+Q-021) appears anywhere in the file. `qulupnay-ananas` seeds as a **draft**: its
+artwork shows strawberry and pineapple while the printed text reads
+_Гранатовый сок_, so nobody yet knows what that product is (Q-019).
+
 ## Tests
 
 ```bash

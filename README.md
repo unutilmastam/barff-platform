@@ -163,10 +163,21 @@ on a re-run:
 - a `system_settings` value, because that would silently undo an admin's change.
 
 It seeds the six roles from `CLAUDE.md` §3 (keys taken from `@barff/types`, not retyped), a
-49-permission `resource:action` baseline, the role grants, four technical settings, and one
+50-permission `resource:action` baseline, the role grants, four technical settings, and one
 admin user from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`. If those two are unset the admin is
 skipped with a warning and everything else still seeds — staging and production create their
 administrator out of band.
+
+The **MOCK product catalogue** is separate and opt-in:
+
+```bash
+SEED_MOCK_PRODUCTS=true pnpm db:seed
+```
+
+Setting that flag with `NODE_ENV=production` fails the seed outright. None of that catalogue is
+a confirmed BARFF fact — the copy is marked `MOCK — REPLACE_WITH_REAL_DATA`, and a seed that
+runs on every deploy would otherwise publish it. See `services/api/README.md` for what the
+fixture does and does not claim.
 
 Commercial values — minimum order quantity, dealer tiers, credit limits, delivery regions — are
 BARFF facts that have not been supplied, so they are absent rather than guessed. See
