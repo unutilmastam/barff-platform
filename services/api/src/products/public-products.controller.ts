@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator.js';
+import { CacheNamespace, PublicCache } from '../common/cache/cache.constants.js';
 import { ProductsService } from './products.service.js';
 import { CategoriesService } from './categories.service.js';
 import { PublicListProductsDto } from './dto/product.dto.js';
@@ -13,10 +14,12 @@ import { PublicListProductsDto } from './dto/product.dto.js';
  * binds has no such field: a draft cannot be requested here even by someone who
  * knows the column exists.
  *
- * Caching and cache invalidation are S11's; these are the reads it will wrap.
+ * Cached by `HttpCacheInterceptor` and retired by `CacheNamespace.PRODUCTS`,
+ * which every admin write in this module bumps.
  */
 @ApiTags('products')
 @Public()
+@PublicCache({ namespace: CacheNamespace.PRODUCTS, ttlSeconds: 300 })
 @Controller({ path: 'products', version: '1' })
 export class PublicProductsController {
   constructor(
