@@ -23,13 +23,36 @@
   },
   "home": {
     "title": "BARFF",
-    "tagline": "Ichimlik ishlab chiqaruvchi",
-    "shellNotice": "Sayt qurilmoqda. Bu — tuzilma va uslub asosi; mazmun keyingi bosqichlarda qo‘shiladi."
+    "tagline": "Ichimliklar ishlab chiqaruvchi",
+    "cta": {
+      "products": "Mahsulotlarni ko‘rish",
+      "company": "Kompaniya haqida"
+    },
+    "products": {
+      "heading": "Mahsulotlar",
+      "all": "Barcha mahsulotlar"
+    },
+    "process": {
+      "heading": "Qanday ishlab chiqariladi"
+    },
+    "quality": {
+      "heading": "Sifat va sertifikatlar",
+      "openDocument": "Hujjatni ochish"
+    },
+    "partnership": {
+      "heading": "Hamkor bo‘ling",
+      "body": "BARFF O‘zbekiston bo‘ylab distribyutorlar va chakana savdo bilan ishlaydi. Shartlarni muhokama qilish uchun bog‘laning.",
+      "cta": "Katalogni ko‘rish"
+    },
+    "news": {
+      "heading": "Yangiliklar"
+    }
   },
   "footer": {
     "rights": "Barcha huquqlar himoyalangan.",
     "privacy": "Maxfiylik siyosati",
-    "terms": "Foydalanish shartlari"
+    "terms": "Foydalanish shartlari",
+    "copyright": "© {year} {brand}. Barcha huquqlar himoyalangan."
   },
   "error": {
     "title": "Xatolik yuz berdi",
@@ -48,5 +71,23 @@
     "light": "Yorug'",
     "dark": "Qorong'i",
     "change": "Mavzuni o'zgartirish. Joriy: {current}."
+  },
+  "company": {
+    "title": "Kompaniya",
+    "intro": "BARFF — O‘zbekistondagi ichimliklar ishlab chiqaruvchi korxona."
+  },
+  "products": {
+    "title": "Mahsulotlar",
+    "intro": "BARFF sharbatlari.",
+    "allCategories": "Barchasi",
+    "filterLabel": "Kategoriya bo‘yicha filtr",
+    "empty": "Hozircha mahsulot e’lon qilinmagan.",
+    "variants": "Hajmlar",
+    "ingredients": "Tarkibi",
+    "storage": "Saqlash shartlari",
+    "shelfLife": "Yaroqlilik muddati",
+    "days": "{count} kun",
+    "documents": "Hujjatlar",
+    "volume": "{volume} ml"
   }
 }

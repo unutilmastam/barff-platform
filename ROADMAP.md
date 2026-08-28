@@ -81,7 +81,7 @@ Claude Code updates this list. `[x]` = done and merged.
 - [x] S09 Products domain
 - [x] S10 Content domain (news, certificates, gallery, documents, settings)
 - [x] S11 Public API + caching
-- [ ] S12 Web: home + company + products
+- [x] S12 Web: home + company + products
 - [ ] S13 Web: production, quality, gallery, news, contact
 - [ ] S14 Leads + B2B form + notifications
 - [ ] S15 i18n + SEO

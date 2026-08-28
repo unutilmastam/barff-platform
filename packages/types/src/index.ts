@@ -6,3 +6,4 @@ export * from './orders.js';
 export * from './pagination.js';
 export * from './roles.js';
 export * from './warehouse.js';
+export * from './public-content.js';
