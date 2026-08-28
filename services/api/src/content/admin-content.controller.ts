@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Permissions } from '../auth/decorators/permissions.decorator.js';
+import { CacheNamespace, InvalidatesCache } from '../common/cache/cache.constants.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { type AuthenticatedUser } from '../auth/types.js';
 import { NewsService } from './news.service.js';
@@ -69,6 +70,7 @@ const actor = (user: AuthenticatedUser) => ({ userId: user.id, email: user.email
  */
 @ApiTags('admin: news')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.NEWS)
 @Controller({ path: 'admin/news', version: '1' })
 export class AdminNewsController {
   constructor(private readonly news: NewsService) {}
@@ -134,6 +136,7 @@ export class AdminNewsController {
 
 @ApiTags('admin: certificates')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.CERTIFICATES)
 @Controller({ path: 'admin/certificates', version: '1' })
 export class AdminCertificatesController {
   constructor(private readonly certificates: CertificatesService) {}
@@ -182,6 +185,7 @@ export class AdminCertificatesController {
 
 @ApiTags('admin: gallery')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.GALLERY)
 @Controller({ path: 'admin/gallery', version: '1' })
 export class AdminGalleryController {
   constructor(private readonly gallery: GalleryService) {}
@@ -230,6 +234,7 @@ export class AdminGalleryController {
 
 @ApiTags('admin: documents')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.DOCUMENTS)
 @Controller({ path: 'admin/documents', version: '1' })
 export class AdminDocumentsController {
   constructor(private readonly documents: DocumentsService) {}
@@ -278,6 +283,7 @@ export class AdminDocumentsController {
 
 @ApiTags('admin: page sections')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.SECTIONS)
 @Controller({ path: 'admin/page-sections', version: '1' })
 export class AdminPageSectionsController {
   constructor(private readonly sections: PageSectionsService) {}
@@ -327,6 +333,7 @@ export class AdminPageSectionsController {
 
 @ApiTags('admin: production steps')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.PRODUCTION_STEPS)
 @Controller({ path: 'admin/production-steps', version: '1' })
 export class AdminProductionStepsController {
   constructor(private readonly steps: ProductionStepsService) {}
@@ -367,6 +374,7 @@ export class AdminProductionStepsController {
 
 @ApiTags('admin: seo')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.SEO)
 @Controller({ path: 'admin/seo', version: '1' })
 export class AdminSeoController {
   constructor(private readonly seo: SeoService) {}
@@ -398,6 +406,7 @@ export class AdminSeoController {
 
 @ApiTags('admin: settings')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.SETTINGS)
 @Controller({ path: 'admin/settings', version: '1' })
 export class AdminSettingsController {
   constructor(private readonly settings: SettingsService) {}

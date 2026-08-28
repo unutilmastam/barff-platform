@@ -282,6 +282,65 @@ nullable, because they are Q-002 and Q-013. Page sections are seeded as empty
 drafts so the CMS and the web app agree on a set of `key`s while the copy stays
 BARFF's to write (Q-026, and Q-001 for the homepage statistics).
 
+## Public API and caching (§13, §26)
+
+**Route grouping.** `ROADMAP.md` S11 asks for the public reads "under
+`/api/v1/public/*` (or documented equivalent)". They keep the paths
+`CLAUDE.md` §11 names — `GET /products`, `GET /products/:slug`, `GET /news`,
+`/content/*` — because §11 is the source of truth for the API surface and §30
+says to take the architecture-compatible option. The grouping is expressed
+where it is actually consumed: every cacheable response carries
+`Cache-Control: public, s-maxage=…` and everything else carries `no-store`, so
+Cloudflare keys on the origin's own directive rather than on a path glob, which
+is the behaviour a CDN wants regardless.
+
+**Private by default.** `NoStoreMiddleware` stamps `no-store` on every response
+before anything else runs; `HttpCacheInterceptor` overrides it only for routes
+that opt in with `@PublicCache()`. Middleware and not the interceptor because
+Nest runs guards _before_ interceptors — a request rejected by `JwtAuthGuard`
+never reaches one, so a default set there would leave every 401 and 403 with no
+cache directive at all.
+
+**Invalidation is a generation counter.** Each namespace has an integer in
+Redis that is part of every key built from it; a write `INCR`s it and the whole
+namespace becomes unreachable in one O(1) command. `KEYS` and `SCAN` walk the
+entire keyspace and block Redis while they do it, and a per-namespace key index
+is a second structure that can drift from the first.
+
+The purge runs in the interceptor via `concatMap`, so it completes _before_ the
+write's own response is emitted. That is what makes "invalidates within one
+request cycle" true rather than nearly true: with a floating promise, a client
+acting on its own `200` could still read the previous copy.
+
+`@InvalidatesCache()` is declared once per admin controller rather than called
+from each write method — a route added later cannot forget it, and "someone
+added an endpoint and forgot to purge" is what makes a cache untrustworthy.
+Media writes purge every namespace: a replaced photo can change a URL any page
+embeds, and nothing records which pages referenced it.
+
+**Cached copies never outlive the URLs inside them.** Public payloads embed
+short-lived signed media URLs. Cache one for longer than its URLs live and the
+API serves a valid-looking response whose every image link is dead — which
+presents as a storage bug, not a caching one. `clampToSignedUrlLifetime` caps
+the Redis TTL and the browser `max-age` so their _sum_ stays well inside
+`S3_SIGNED_URL_TTL`, and the invariant is asserted across a range of
+configurations in `cache.service.test.ts`.
+
+**ETags** are a SHA-256 of the response body, and `If-None-Match` is parsed
+properly: a list, and a tag a proxy has weakened to `W/"…"` (Cloudflare does
+this on compressed responses). Caching and revalidation ship together on
+purpose — without the cache, every request re-signs its media URLs, so the body
+changes each time, so `If-None-Match` could never match.
+
+**Redis down means slower, not broken.** Every cache read and write degrades to
+a miss. `test/cache-degraded.e2e-spec.ts` boots the app against an unreachable
+Redis and asserts the whole public API still answers 200 — a cache that can take
+the site off the air has made the system less available than having no cache.
+
+TTLs: products and news 300s, the rest of the content 600s, and `settings` 60s
+because it carries `site.maintenance_mode` and an operator flipping that in an
+emergency should not wait ten minutes.
+
 ## Tests
 
 ```bash

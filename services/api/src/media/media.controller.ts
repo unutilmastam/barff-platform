@@ -26,6 +26,7 @@ import {
 } from '@nestjs/swagger';
 import { type Request } from 'express';
 import { Permissions } from '../auth/decorators/permissions.decorator.js';
+import { ALL_CACHE_NAMESPACES, InvalidatesCache } from '../common/cache/cache.constants.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { type AuthenticatedUser } from '../auth/types.js';
 import { ApiPaginatedResponse } from '../common/dto/paginated-response.dto.js';
@@ -46,6 +47,11 @@ import { ACCEPTED_MIME_TYPES } from './processing/file-signature.js';
  */
 @ApiTags('media')
 @ApiBearerAuth('access-token')
+// Any media write can change a URL that a cached page embeds — a replaced
+// photo, a deleted certificate — and there is no cheap way to know which pages
+// referenced it. Purging every namespace is the honest answer: media writes are
+// rare, and serving a page whose images 404 is not.
+@InvalidatesCache(...ALL_CACHE_NAMESPACES)
 @Controller({ path: 'media', version: '1' })
 export class MediaController {
   constructor(private readonly media: MediaService) {}

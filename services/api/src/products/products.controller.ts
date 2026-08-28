@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Permissions } from '../auth/decorators/permissions.decorator.js';
+import { CacheNamespace, InvalidatesCache } from '../common/cache/cache.constants.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { type AuthenticatedUser } from '../auth/types.js';
 import { ProductsService } from './products.service.js';
@@ -47,6 +48,7 @@ const actor = (user: AuthenticatedUser) => ({ userId: user.id, email: user.email
  */
 @ApiTags('admin: products')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.PRODUCTS)
 @Controller({ path: 'admin/products', version: '1' })
 export class AdminProductsController {
   constructor(private readonly products: ProductsService) {}
@@ -188,6 +190,7 @@ export class AdminProductsController {
 
 @ApiTags('admin: product categories')
 @ApiBearerAuth('access-token')
+@InvalidatesCache(CacheNamespace.PRODUCTS)
 @Controller({ path: 'admin/product-categories', version: '1' })
 export class AdminCategoriesController {
   constructor(private readonly categories: CategoriesService) {}

@@ -57,6 +57,18 @@ export class RedisService implements OnModuleDestroy {
     await (await this.ensureConnected()).set(key, value, 'EX', ttlSeconds);
   }
 
+  /**
+   * Atomically increments a counter and returns the new value.
+   *
+   * Used by the cache's generation counters (S11): bumping one makes every key
+   * built from the previous generation unreachable in a single O(1) command,
+   * without `SCAN` or `KEYS` — both of which are O(n) over the whole keyspace
+   * and block the server while they run.
+   */
+  async incr(key: string): Promise<number> {
+    return (await this.ensureConnected()).incr(key);
+  }
+
   async del(...keys: string[]): Promise<number> {
     if (keys.length === 0) return 0;
     return (await this.ensureConnected()).del(...keys);

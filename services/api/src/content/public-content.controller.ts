@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator.js';
+import { CacheNamespace, PublicCache } from '../common/cache/cache.constants.js';
 import { NewsService } from './news.service.js';
 import { CertificatesService } from './certificates.service.js';
 import { GalleryService } from './gallery.service.js';
@@ -26,6 +27,7 @@ import { BadRequestException } from '@nestjs/common';
  */
 @ApiTags('news')
 @Public()
+@PublicCache({ namespace: CacheNamespace.NEWS, ttlSeconds: 300 })
 @Controller({ path: 'news', version: '1' })
 export class PublicNewsController {
   constructor(private readonly news: NewsService) {}
@@ -51,7 +53,11 @@ export class PublicNewsController {
  * Everything else the public site reads from the CMS.
  *
  * Grouped under one controller because these are all small, unpaginated reads
- * that a page fetches alongside its main content. S11 wraps them in caching.
+ * that a page fetches alongside its main content.
+ *
+ * Each route names its own cache namespace rather than sharing one: publishing
+ * a certificate should not throw away the gallery, and `settings` needs a much
+ * shorter life than the rest because it carries the maintenance-mode flag.
  */
 @ApiTags('content')
 @Public()
@@ -68,18 +74,21 @@ export class PublicContentController {
   ) {}
 
   @Get('certificates')
+  @PublicCache({ namespace: CacheNamespace.CERTIFICATES, ttlSeconds: 600 })
   @ApiOperation({ summary: 'Published certificates for /quality' })
   listCertificates() {
     return this.certificates.listPublic();
   }
 
   @Get('gallery')
+  @PublicCache({ namespace: CacheNamespace.GALLERY, ttlSeconds: 600 })
   @ApiOperation({ summary: 'Published gallery items' })
   listGallery(@Query() query: PublicListGalleryDto) {
     return this.gallery.listPublic(query);
   }
 
   @Get('documents')
+  @PublicCache({ namespace: CacheNamespace.DOCUMENTS, ttlSeconds: 600 })
   @ApiOperation({
     summary: 'Published downloads',
     description:
@@ -90,12 +99,14 @@ export class PublicContentController {
   }
 
   @Get('production-steps')
+  @PublicCache({ namespace: CacheNamespace.PRODUCTION_STEPS, ttlSeconds: 600 })
   @ApiOperation({ summary: 'The production process, in order' })
   listProductionSteps() {
     return this.steps.listPublic();
   }
 
   @Get('seo')
+  @PublicCache({ namespace: CacheNamespace.SEO, ttlSeconds: 600 })
   @ApiOperation({
     summary: 'SEO override for a route',
     description:
@@ -106,6 +117,10 @@ export class PublicContentController {
   }
 
   @Get('settings')
+  // Deliberately short: this map carries `site.maintenance_mode`, and a switch
+  // an operator flips in an emergency must not wait ten minutes to take effect
+  // for visitors already holding a cached copy.
+  @PublicCache({ namespace: CacheNamespace.SETTINGS, ttlSeconds: 60 })
   @ApiOperation({
     summary: 'Settings flagged public',
     description: 'A flat key/value map. Private settings are never included.',
@@ -115,6 +130,7 @@ export class PublicContentController {
   }
 
   @Get('sections/:page')
+  @PublicCache({ namespace: CacheNamespace.SECTIONS, ttlSeconds: 600 })
   @ApiOperation({ summary: 'Published sections of a landing page, in render order' })
   listSections(@Param('page') page: string) {
     // Validated here rather than by a pipe so an unknown page reads as a client
