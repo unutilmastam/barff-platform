@@ -248,6 +248,15 @@ it as the transformer.
 (reserved, never listening) rather than stopping the real services, so the suite
 stays self-contained.
 
+**Anything the suite needs from the environment must be listed in
+`turbo.json#globalPassThroughEnv`.** Turborepo 2 runs tasks in strict
+environment mode: a variable that is not declared there is _not_ passed to the
+task, even when it is set in the shell. Locally that goes unnoticed, because
+`ConfigModule` also reads `services/api/.env` — CI has no such file, so an
+undeclared variable arrives as `undefined` and the app refuses to boot. If a
+suite passes here and fails in CI with "Invalid environment configuration", that
+is the first thing to check.
+
 **Database.** `PrismaService` extends `PrismaClient` and is provided globally.
 Repositories live in their feature module — controllers never talk to Prisma
 directly (§11). The schema is at `prisma/` in the repo root.
