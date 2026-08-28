@@ -165,9 +165,9 @@ upscaled.
 option. Private assets are reachable only through a short-lived signed URL; the
 bucket is never public and no ACL is ever sent on a `PutObject`.
 
-**Ordering matters** in two places: the database row is written *after* the
+**Ordering matters** in two places: the database row is written _after_ the
 bytes are stored, because a stray object is a sweep away and a row pointing at
-nothing is a broken page; and on replace, the old objects are deleted *after*
+nothing is a broken page; and on replace, the old objects are deleted _after_
 the new ones land, so a mid-way failure leaves the asset serving its previous
 content rather than nothing.
 
