@@ -244,6 +244,11 @@ describe('public API caching (e2e)', () => {
       expect((await http().get('/api/v1/news?pageSize=3')).headers['x-cache']).toBe('MISS');
       // Certificates were not touched, so their cache survives. Without this a
       // single edit would cold-start the whole public site.
+      //
+      // This assertion requires that no other suite purges `certificates` while
+      // it runs, which is why `vitest.config.ts` sets `fileParallelism: false`.
+      // Under parallel files, `media.e2e-spec.ts` purges every namespace on
+      // each upload and this line fails intermittently.
       expect((await http().get('/api/v1/content/certificates')).headers['x-cache']).toBe('HIT');
     });
 
