@@ -23,7 +23,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
         'w-full rounded border bg-surface-inset px-3 py-2 text-sm text-content-primary',
         // Placeholders must meet contrast — they are not disabled text.
         'placeholder:text-content-muted',
-        'transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+        'transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         'disabled:cursor-not-allowed disabled:opacity-50',
         field?.hasError === true ? 'border-state-danger' : 'border-border',
         className,

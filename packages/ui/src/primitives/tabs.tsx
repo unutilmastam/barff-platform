@@ -43,7 +43,7 @@ export const TabsTrigger = forwardRef<
       className={cn(
         'inline-flex h-8 items-center justify-center rounded-sm px-3 text-sm font-medium',
         'text-content-muted transition-colors',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         'hover:text-content-secondary',
         'data-[state=active]:bg-surface-overlay data-[state=active]:text-content-primary',
         'disabled:pointer-events-none disabled:opacity-50',
@@ -62,7 +62,7 @@ export const TabsContent = forwardRef<
     <TabsPrimitive.Content
       ref={ref}
       className={cn(
-        'mt-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+        'mt-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         className,
       )}
       {...props}

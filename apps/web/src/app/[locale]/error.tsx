@@ -42,7 +42,7 @@ export default function Error({
         <button
           type="button"
           onClick={reset}
-          className="mt-8 rounded bg-brand-500 px-5 py-2.5 font-semibold text-content-inverse transition-colors hover:bg-brand-400"
+          className="mt-8 rounded bg-accent px-5 py-2.5 font-semibold text-content-inverse transition-colors hover:bg-accent-hover"
         >
           {t('retry')}
         </button>

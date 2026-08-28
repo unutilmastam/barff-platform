@@ -8,16 +8,16 @@ import { cn } from '../lib/cn';
 export const linkVariants = cva(
   [
     'inline-flex items-center gap-1 rounded-sm transition-colors',
-    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
   ],
   {
     variants: {
       variant: {
         // Underlined by default: colour alone is not a sufficient cue that
         // something is a link, and it fails for colour-blind readers.
-        default: 'text-content-primary underline underline-offset-4 hover:text-brand-400',
+        default: 'text-content-primary underline underline-offset-4 hover:text-accent-text',
         subtle: 'text-content-muted hover:text-content-primary',
-        brand: 'text-brand-500 underline underline-offset-4 hover:text-brand-400',
+        brand: 'text-accent-text underline underline-offset-4 hover:text-accent-text',
       },
     },
     defaultVariants: { variant: 'default' },

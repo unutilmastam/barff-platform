@@ -48,8 +48,25 @@ large type scale, shared motion timings.
 > not supplied a brand guideline, the exact green HEX or a brand typeface — see
 > `docs/OPEN-QUESTIONS.md` → Q-011. Do not treat these values as approved.
 
-`src/tailwind-preset.ts` shapes those tokens into a Tailwind v3 preset. If S06
-adopts Tailwind v4 (CSS-first `@theme`), import `designTokens` directly and emit
-custom properties instead — the values are the same either way, and the preset
-can then be deleted. The package intentionally does not depend on
-`tailwindcss`: no app exists yet to pin a major version against.
+`src/theme.ts` layers **semantic** tokens on top: each names the _role_ a colour
+plays and gives it a value per theme (§16a). `src/tailwind-preset.ts` points
+Tailwind at `var(--barff-…)` for every one of them, so a theme can actually be
+switched at runtime.
+
+Light is authored, not derived. On dark, borders are white at low alpha and
+glass is a white film — both invisible on a light surface — and the amber that
+reads cleanly on near-black fails badly on near-white. An inversion produces a
+theme that is wrong in a dozen specific ways.
+
+```bash
+pnpm --filter @barff/config generate:theme   # rewrites theme.css from theme.ts
+```
+
+`theme.css` is generated and committed, and `theme-css.test.ts` fails if the two
+disagree — one source of truth, no build step to forget.
+
+`contrast.test.ts` asserts every rendered pair against WCAG AA in **both**
+themes, plus the seven product accents against the 3:1 non-text minimum. The
+light palette was tuned against those assertions rather than the other way
+round, and two of them (`content-on-fill`, `accent-hover`) exist because the
+test refused a value that looked fine.

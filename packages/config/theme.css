@@ -1,0 +1,199 @@
+/*
+ * GENERATED FILE — do not edit.
+ *
+ * Source: packages/config/src/theme.ts
+ * Regenerate: pnpm --filter @barff/config generate:theme
+ *
+ * theme-css.test.ts fails if this file and the tokens disagree.
+ */
+
+:root {
+  color-scheme: dark;
+
+  --barff-surface-base: #08090B;
+  --barff-surface-raised: #0E1013;
+  --barff-surface-overlay: #15181C;
+  --barff-surface-inset: #050607;
+  --barff-surface-glass: rgba(255, 255, 255, 0.04);
+  --barff-surface-glass-strong: rgba(255, 255, 255, 0.07);
+  --barff-border-subtle: rgba(255, 255, 255, 0.08);
+  --barff-border-default: rgba(255, 255, 255, 0.12);
+  --barff-border-strong: rgba(255, 255, 255, 0.20);
+  --barff-border-accent: rgba(46, 182, 106, 0.40);
+  --barff-content-primary: #F5F7F6;
+  --barff-content-secondary: #B4BCB8;
+  --barff-content-muted: #7C8783;
+  --barff-content-disabled: #4E5754;
+  --barff-content-inverse: #08090B;
+  --barff-content-on-fill: #F5F7F6;
+  --barff-accent: #2EB66A;
+  --barff-accent-hover: #40C578;
+  --barff-accent-text: #2EB66A;
+  --barff-accent-soft: rgba(46, 182, 106, 0.12);
+  --barff-state-success: #2EB66A;
+  --barff-state-success-fill: #15683D;
+  --barff-state-warning: #E0A32E;
+  --barff-state-warning-fill: #6E4C00;
+  --barff-state-danger: #E05252;
+  --barff-state-danger-fill: #C43C3C;
+  --barff-state-info: #4A9EE0;
+  --barff-state-info-fill: #14528F;
+  --barff-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --barff-shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --barff-shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.50);
+  --barff-accent-product-granat: #E24B5A;
+  --barff-accent-product-apelsin: #F0993C;
+  --barff-accent-product-olcha: #D9556E;
+  --barff-accent-product-shaftoli: #F0A878;
+  --barff-accent-product-olma: #8FD14F;
+  --barff-accent-product-multifrukt: #F0C33C;
+  --barff-accent-product-qulupnay-ananas: #F06A9A;
+
+  /*
+   * The reactive accent of CLAUDE.md §17a. Defaults to the theme accent and is
+   * reassigned on product hover; it drives glow and highlights only, never
+   * text, surfaces or borders.
+   */
+  --barff-accent-glow: var(--barff-accent);
+
+  /*
+   * The focus ring is one declaration for both themes because it is written in
+   * terms of the others: the inner gap takes the page colour, so it follows
+   * whichever theme is active instead of hard-coding a near-black that would be
+   * simply wrong on light.
+   */
+  --barff-shadow-focus: 0 0 0 2px var(--barff-surface-base), 0 0 0 4px var(--barff-accent);
+}
+
+/* No explicit choice yet: follow the operating system. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+
+    --barff-surface-base: #F4F6F5;
+    --barff-surface-raised: #FFFFFF;
+    --barff-surface-overlay: #FFFFFF;
+    --barff-surface-inset: #E7EBE9;
+    --barff-surface-glass: rgba(8, 9, 11, 0.04);
+    --barff-surface-glass-strong: rgba(8, 9, 11, 0.07);
+    --barff-border-subtle: rgba(8, 9, 11, 0.10);
+    --barff-border-default: rgba(8, 9, 11, 0.16);
+    --barff-border-strong: rgba(8, 9, 11, 0.28);
+    --barff-border-accent: rgba(26, 116, 68, 0.40);
+    --barff-content-primary: #0B0D0C;
+    --barff-content-secondary: #414845;
+    --barff-content-muted: #565E5A;
+    --barff-content-disabled: #9AA19E;
+    --barff-content-inverse: #FFFFFF;
+    --barff-content-on-fill: #FFFFFF;
+    --barff-accent: #1A7444;
+    --barff-accent-hover: #155A35;
+    --barff-accent-text: #166437;
+    --barff-accent-soft: rgba(26, 116, 68, 0.10);
+    --barff-state-success: #136B3D;
+    --barff-state-success-fill: #136B3D;
+    --barff-state-warning: #7A5200;
+    --barff-state-warning-fill: #7A5200;
+    --barff-state-danger: #A81F1F;
+    --barff-state-danger-fill: #A81F1F;
+    --barff-state-info: #15558F;
+    --barff-state-info-fill: #15558F;
+    --barff-shadow-subtle: 0 1px 2px rgba(8, 9, 11, 0.06);
+    --barff-shadow-card: 0 8px 24px rgba(8, 9, 11, 0.08);
+    --barff-shadow-overlay: 0 24px 64px rgba(8, 9, 11, 0.14);
+    --barff-accent-product-granat: #A81E2E;
+    --barff-accent-product-apelsin: #8A5100;
+    --barff-accent-product-olcha: #9E2247;
+    --barff-accent-product-shaftoli: #8F4A28;
+    --barff-accent-product-olma: #456F14;
+    --barff-accent-product-multifrukt: #6E5200;
+    --barff-accent-product-qulupnay-ananas: #A32060;
+  }
+}
+
+/* An explicit choice, persisted by the toggle. Last, so it wins. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --barff-surface-base: #F4F6F5;
+  --barff-surface-raised: #FFFFFF;
+  --barff-surface-overlay: #FFFFFF;
+  --barff-surface-inset: #E7EBE9;
+  --barff-surface-glass: rgba(8, 9, 11, 0.04);
+  --barff-surface-glass-strong: rgba(8, 9, 11, 0.07);
+  --barff-border-subtle: rgba(8, 9, 11, 0.10);
+  --barff-border-default: rgba(8, 9, 11, 0.16);
+  --barff-border-strong: rgba(8, 9, 11, 0.28);
+  --barff-border-accent: rgba(26, 116, 68, 0.40);
+  --barff-content-primary: #0B0D0C;
+  --barff-content-secondary: #414845;
+  --barff-content-muted: #565E5A;
+  --barff-content-disabled: #9AA19E;
+  --barff-content-inverse: #FFFFFF;
+  --barff-content-on-fill: #FFFFFF;
+  --barff-accent: #1A7444;
+  --barff-accent-hover: #155A35;
+  --barff-accent-text: #166437;
+  --barff-accent-soft: rgba(26, 116, 68, 0.10);
+  --barff-state-success: #136B3D;
+  --barff-state-success-fill: #136B3D;
+  --barff-state-warning: #7A5200;
+  --barff-state-warning-fill: #7A5200;
+  --barff-state-danger: #A81F1F;
+  --barff-state-danger-fill: #A81F1F;
+  --barff-state-info: #15558F;
+  --barff-state-info-fill: #15558F;
+  --barff-shadow-subtle: 0 1px 2px rgba(8, 9, 11, 0.06);
+  --barff-shadow-card: 0 8px 24px rgba(8, 9, 11, 0.08);
+  --barff-shadow-overlay: 0 24px 64px rgba(8, 9, 11, 0.14);
+  --barff-accent-product-granat: #A81E2E;
+  --barff-accent-product-apelsin: #8A5100;
+  --barff-accent-product-olcha: #9E2247;
+  --barff-accent-product-shaftoli: #8F4A28;
+  --barff-accent-product-olma: #456F14;
+  --barff-accent-product-multifrukt: #6E5200;
+  --barff-accent-product-qulupnay-ananas: #A32060;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --barff-surface-base: #08090B;
+  --barff-surface-raised: #0E1013;
+  --barff-surface-overlay: #15181C;
+  --barff-surface-inset: #050607;
+  --barff-surface-glass: rgba(255, 255, 255, 0.04);
+  --barff-surface-glass-strong: rgba(255, 255, 255, 0.07);
+  --barff-border-subtle: rgba(255, 255, 255, 0.08);
+  --barff-border-default: rgba(255, 255, 255, 0.12);
+  --barff-border-strong: rgba(255, 255, 255, 0.20);
+  --barff-border-accent: rgba(46, 182, 106, 0.40);
+  --barff-content-primary: #F5F7F6;
+  --barff-content-secondary: #B4BCB8;
+  --barff-content-muted: #7C8783;
+  --barff-content-disabled: #4E5754;
+  --barff-content-inverse: #08090B;
+  --barff-content-on-fill: #F5F7F6;
+  --barff-accent: #2EB66A;
+  --barff-accent-hover: #40C578;
+  --barff-accent-text: #2EB66A;
+  --barff-accent-soft: rgba(46, 182, 106, 0.12);
+  --barff-state-success: #2EB66A;
+  --barff-state-success-fill: #15683D;
+  --barff-state-warning: #E0A32E;
+  --barff-state-warning-fill: #6E4C00;
+  --barff-state-danger: #E05252;
+  --barff-state-danger-fill: #C43C3C;
+  --barff-state-info: #4A9EE0;
+  --barff-state-info-fill: #14528F;
+  --barff-shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --barff-shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --barff-shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.50);
+  --barff-accent-product-granat: #E24B5A;
+  --barff-accent-product-apelsin: #F0993C;
+  --barff-accent-product-olcha: #D9556E;
+  --barff-accent-product-shaftoli: #F0A878;
+  --barff-accent-product-olma: #8FD14F;
+  --barff-accent-product-multifrukt: #F0C33C;
+  --barff-accent-product-qulupnay-ananas: #F06A9A;
+}

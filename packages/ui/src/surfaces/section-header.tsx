@@ -40,7 +40,7 @@ export function SectionHeader({
     >
       <div className={cn('max-w-2xl', align === 'center' && 'mx-auto')}>
         {eyebrow !== undefined && (
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-brand-500">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-accent-text">
             {eyebrow}
           </p>
         )}

@@ -56,7 +56,7 @@ export const DialogContent = forwardRef<
           className={cn(
             'absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded',
             'text-content-muted transition-colors hover:bg-surface-overlay hover:text-content-primary',
-            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
           )}
         >
           {/* The label is passed in rather than hard-coded: this package must

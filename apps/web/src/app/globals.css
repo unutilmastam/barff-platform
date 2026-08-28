@@ -1,5 +1,15 @@
 @import 'tailwindcss';
 
+/* Both themes, as custom properties. Generated from the TypeScript tokens in
+   @barff/config (`pnpm --filter @barff/config generate:theme`), so the palette
+   still has exactly one source of truth — theme-css.test.ts fails if this file
+   and the tokens disagree.
+
+   A relative path rather than a package specifier, for the same reason
+   `@source` below uses one: the package reaches the app as a symlink in
+   node_modules, and Tailwind's resolution skips it. */
+@import '../../../../packages/config/theme.css';
+
 /* Loads the BARFF design tokens from @barff/config (see tailwind.config.ts).
    The tokens are TypeScript so one definition serves Tailwind, the API's PDF
    exports and any future consumer — a CSS-only @theme block would duplicate
@@ -20,9 +30,33 @@
  */
 @source "../../../../packages/ui/src";
 
+/*
+ * The reactive accent of §17a has to be *registered* to be animatable.
+ *
+ * An ordinary custom property is a token as far as the cascade is concerned,
+ * so `transition: --barff-accent-glow 240ms` on an unregistered property does
+ * nothing at all — the value snaps. Declaring its syntax makes it a real colour
+ * the engine can interpolate.
+ *
+ * `inherits: true` so a section can set it once and every descendant's glow
+ * follows, which is how §17a is meant to work: one hovered bottle, one page
+ * accent.
+ */
+@property --barff-accent-glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #2eb66a;
+}
+
 @layer base {
   :root {
-    color-scheme: dark;
+    /*
+     * §17a: the shift is a property transition, not a re-render. Declared here
+     * rather than per component so every consumer of the accent moves together
+     * and S12 does not have to remember it.
+     */
+    transition: --barff-accent-glow var(--barff-motion-duration, 420ms)
+      cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   html {
@@ -59,14 +93,17 @@
      a site unusable by keyboard, and it is the single most common a11y
      regression. */
   :focus-visible {
-    outline: 2px solid theme(colors.brand.500);
+    /* The accent, not the raw brand ramp: on a light background the ramp's
+       mid green is too pale to see, and a focus ring nobody can see is the
+       same as no focus ring. */
+    outline: 2px solid theme(colors.accent.DEFAULT);
     outline-offset: 2px;
     border-radius: 2px;
   }
 
   /* Selection uses the brand accent rather than the browser default blue. */
   ::selection {
-    background-color: theme(colors.brand.500);
+    background-color: theme(colors.accent.DEFAULT);
     color: theme(colors.content.inverse);
   }
 }

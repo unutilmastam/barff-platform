@@ -25,12 +25,14 @@
     "./tsconfig/library.json": "./tsconfig/library.json",
     "./tsconfig/nestjs.json": "./tsconfig/nestjs.json",
     "./tsconfig/nextjs.json": "./tsconfig/nextjs.json",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./theme.css": "./theme.css"
   },
   "files": [
     "dist",
     "eslint",
-    "tsconfig"
+    "tsconfig",
+    "theme.css"
   ],
   "scripts": {
     "build": "tsup",
@@ -38,7 +40,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist .turbo *.tsbuildinfo",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "generate:theme": "tsx scripts/generate-theme-css.ts"
   },
   "dependencies": {
     "@eslint/js": "catalog:",

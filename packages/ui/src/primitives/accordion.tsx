@@ -38,8 +38,8 @@ export const AccordionTrigger = forwardRef<
         ref={ref}
         className={cn(
           'flex flex-1 items-center justify-between gap-4 py-4 text-left',
-          'text-base font-medium text-content-primary transition-colors hover:text-brand-400',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+          'text-base font-medium text-content-primary transition-colors hover:text-accent-text',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
           '[&[data-state=open]>svg]:rotate-180',
           className,
         )}

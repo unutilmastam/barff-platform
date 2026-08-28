@@ -32,7 +32,7 @@ export const SelectTrigger = forwardRef<
       className={cn(
         'flex h-10 w-full items-center justify-between gap-2 rounded border bg-surface-inset px-3',
         'text-sm text-content-primary transition-colors',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         'disabled:cursor-not-allowed disabled:opacity-50',
         // Placeholder text is live content, not a disabled control, so it must
         // meet contrast. `content.disabled` gave 2.72:1 on this surface.
