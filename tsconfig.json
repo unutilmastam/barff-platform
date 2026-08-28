@@ -4,9 +4,13 @@
     "noEmit": true,
     "allowJs": true,
     "checkJs": false,
-    "types": []
+    // Everything this project covers — the Prisma seed, prisma.config.ts, the
+    // eslint and prettier configs — is a Node script. Without this they were
+    // typechecked against a runtime with no `process` and no `console`, which
+    // in practice meant prisma/ was simply not covered at all.
+    "types": ["node"]
   },
-  "include": ["*.ts", "*.mjs", "*.cjs"],
+  "include": ["*.ts", "*.mjs", "*.cjs", "prisma/**/*.ts"],
   "exclude": [
     "node_modules",
     "apps",
