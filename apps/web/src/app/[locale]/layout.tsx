@@ -8,6 +8,7 @@ import { QueryProvider } from '@/lib/query-provider';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { SkipLink } from '@/components/layout/skip-link';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
 
 /** Renders all three locales at build time rather than on first request. */
 export function generateStaticParams() {
@@ -49,7 +50,16 @@ export default async function LocaleLayout({
   setRequestLocale(locale);
 
   return (
-    <html lang={locale} className="h-full">
+    // `suppressHydrationWarning` because the script below sets `data-theme` on
+    // this element before React hydrates. Without it React reports a mismatch
+    // it cannot do anything about — the whole point is that the attribute
+    // arrives ahead of hydration.
+    <html lang={locale} className="h-full" suppressHydrationWarning>
+      <head>
+        {/* Applies the stored theme before first paint. A visitor who chose
+            light must not see a flash of the dark palette on every navigation. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       {/* min-h-full + flex column keeps the footer at the bottom on a short
           page without absolute positioning. */}
       <body className="flex min-h-full flex-col bg-surface-base font-sans antialiased">

@@ -33,16 +33,47 @@ Import `Link` from `@/i18n/navigation`, never from `next/link`: the former keeps
 the active locale in the href, so a link cannot silently drop a visitor from
 `/ru` back to `/uz`.
 
-## Theme
+## Theme (§16a)
 
 Tailwind v4 loads `tailwind.config.ts` via `@config` in `globals.css`, and that
-config spreads the preset from `@barff/config`. The tokens are TypeScript
-(`design-tokens.ts`) so one definition serves Tailwind and any future consumer;
-re-declaring the palette in a CSS `@theme` block would duplicate every value and
-the copies would drift.
+config spreads the preset from `@barff/config`. The tokens are TypeScript so one
+definition serves Tailwind and any future consumer.
 
-> ⚠ The brand green and the font stack are **placeholders** until BARFF supplies
-> a brand guideline — `docs/OPEN-QUESTIONS.md` → Q-011.
+**Dark and light are both first-class.** Themed values reach CSS as custom
+properties (`packages/config/theme.css`, imported at the top of `globals.css`)
+rather than as literals. That is the whole mechanism: before S07a, Tailwind
+compiled `.bg-surface-base{background-color:#08090b}`, and there was no runtime
+value for a toggle or a media query to change.
+
+The toggle in the header cycles **system → light → dark**. Three states, not
+two: `system` has to remain reachable, or a visitor who once tapped the control
+can never go back to following their OS. Choosing `system` _removes_ the
+`data-theme` attribute rather than resolving it, so changing the OS setting with
+the tab open is followed live.
+
+`THEME_INIT_SCRIPT` runs inline in `<head>`, before the body is parsed. Without
+it, a visitor who chose light gets a flash of the dark palette on every
+navigation — worst on a slow connection, where it is least forgivable.
+
+**Never use a raw `brand-*` utility.** The ramp is one value in both themes, so
+`bg-brand-500` passes WCAG on dark and fails at 2.6:1 on light — which is what a
+Lighthouse run in light mode actually found on `/dev/ui` and the error pages.
+Use `accent`, `accent-hover`, `accent-text`, `accent-soft`; a test in this app
+and in `packages/ui` fails if the ramp comes back.
+
+### Reactive accent (§17a)
+
+`--barff-accent-glow` is registered with `@property` so it can transition — an
+unregistered custom property snaps instead of animating. `accentGlowStyle(slug)`
+in `src/lib/product-accent.ts` is what S12 hangs on a bottle; the value
+inherits, so one hovered product tints everything beneath it with no re-render.
+
+It drives **glow and highlights only**. Body text, surfaces and borders never
+read it, which is what makes §17a's "AA at every point of the transition"
+structurally true rather than a claim about animation frames.
+
+> ⚠ The brand green, the font stack and the seven juice accents are
+> **placeholders** — `docs/OPEN-QUESTIONS.md` → Q-011, Q-028, Q-029.
 
 ## Accessibility
 

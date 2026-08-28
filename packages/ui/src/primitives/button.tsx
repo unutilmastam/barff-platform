@@ -18,14 +18,14 @@ export const buttonVariants = cva(
     'rounded font-semibold transition-colors',
     // Never removed. A design system that drops the focus ring makes every
     // page built on it unusable by keyboard.
-    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
     // `pointer-events-none` stops the cursor implying the control is live.
     'disabled:pointer-events-none disabled:opacity-50',
   ],
   {
     variants: {
       variant: {
-        primary: 'bg-brand-500 text-content-inverse hover:bg-brand-400',
+        primary: 'bg-accent text-content-inverse hover:bg-accent-hover',
         secondary:
           'border border-border bg-surface-overlay text-content-primary hover:bg-surface-raised',
         ghost: 'text-content-secondary hover:bg-surface-overlay hover:text-content-primary',

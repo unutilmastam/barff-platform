@@ -25,9 +25,9 @@ export const Checkbox = forwardRef<
         // oversized visual control.
         'peer inline-flex size-5 shrink-0 items-center justify-center rounded-sm border border-border',
         'bg-surface-inset transition-colors',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500',
-        'data-[state=checked]:border-brand-500 data-[state=checked]:bg-brand-500',
-        'data-[state=indeterminate]:border-brand-500 data-[state=indeterminate]:bg-brand-500',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+        'data-[state=checked]:border-accent data-[state=checked]:bg-accent',
+        'data-[state=indeterminate]:border-accent data-[state=indeterminate]:bg-accent',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}

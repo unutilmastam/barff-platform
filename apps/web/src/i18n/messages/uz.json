@@ -41,5 +41,12 @@
     "title": "Sahifa topilmadi",
     "description": "Siz izlagan sahifa mavjud emas yoki ko‘chirilgan.",
     "backHome": "Bosh sahifaga qaytish"
+  },
+  "theme": {
+    "label": "Mavzu",
+    "system": "Tizim",
+    "light": "Yorug'",
+    "dark": "Qorong'i",
+    "change": "Mavzuni o'zgartirish. Joriy: {current}."
   }
 }

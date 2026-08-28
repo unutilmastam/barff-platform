@@ -76,6 +76,7 @@ Claude Code updates this list. `[x]` = done and merged.
 
 **Phase 1**
 - [x] S07 Design system (`packages/ui`)
+- [x] S07a Light/dark themes + reactive accent
 - [x] S08 Media/storage module
 - [x] S09 Products domain
 - [x] S10 Content domain (news, certificates, gallery, documents, settings)
@@ -250,6 +251,25 @@ Tasks
 
 DoD: every primitive documented, a11y-checked, used by at least one page later. No excessive rounding/gradients (§16).
 Commit: `feat(S07): barff design system`
+
+---
+
+## S07a — Light/dark themes + reactive accent
+**Depends on:** S07 · **Added:** client requirement, `CLAUDE.md` §16a / §17a
+
+Inserted after S07 rather than renumbered: S08–S11 are merged, and their numbers
+appear in commits, changelog lines and branch names.
+
+Tasks
+- Restructure the design tokens so themed values reach CSS as custom properties. Flat hex compiled into utilities is single-theme by construction — there is nothing for a toggle or a media query to change.
+- Author a light palette with its own surface, border and shadow values (§16a: a first-class theme, not an inversion).
+- Extend the `@barff/config` contrast test to a `[dark, light] × pairs` matrix.
+- Replace every raw `brand-*` ramp utility in `packages/ui` and `apps/web` with semantic accent tokens, and add a test so it cannot come back.
+- `--barff-accent-glow`, registered with `@property` so it can transition, plus per-product accent variables for S12 (§17a).
+- Theme toggle cycling system → light → dark, persisted, with a pre-hydration script so the first paint is not the wrong theme.
+
+DoD: WCAG AA asserted on every token pair in both themes; zero axe violations on every locale in both themes; the toggle survives a reload and `system` still follows the OS.
+Commit: `feat(S07a): light and dark themes`
 
 ---
 

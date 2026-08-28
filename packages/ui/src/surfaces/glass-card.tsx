@@ -22,7 +22,7 @@ export const glassCardVariants = cva('rounded-lg border transition-colors', {
       solid: 'border-border bg-surface-raised',
       // The one place a gradient is used, and it is barely there — a hint of
       // brand at one corner, not a coloured card.
-      accent: 'border-border-brand bg-gradient-to-br from-brand-950/60 to-surface-raised',
+      accent: 'border-border-brand bg-gradient-to-br from-accent-soft to-surface-raised',
     },
     padding: { none: '', sm: 'p-4', md: 'p-6', lg: 'p-8' },
     interactive: {

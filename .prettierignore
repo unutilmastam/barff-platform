@@ -23,3 +23,7 @@ index.html
 
 # Prisma-generated client
 services/api/generated
+
+# Generated from packages/config/src/theme.ts. Its bytes are asserted against
+# the generator in theme-css.test.ts, so reformatting it would fail that test.
+packages/config/theme.css

@@ -7,12 +7,12 @@ export default function NotFound() {
 
   return (
     <Container as="section" className="py-sectionSm sm:py-section">
-      <p className="text-sm font-semibold text-brand-500">404</p>
+      <p className="text-sm font-semibold text-accent-text">404</p>
       <h1 className="mt-2 text-3xl font-bold text-content-primary sm:text-4xl">{t('title')}</h1>
       <p className="mt-4 max-w-xl text-content-secondary">{t('description')}</p>
       <Link
         href="/"
-        className="mt-8 inline-block rounded bg-brand-500 px-5 py-2.5 font-semibold text-content-inverse transition-colors hover:bg-brand-400"
+        className="mt-8 inline-block rounded bg-accent px-5 py-2.5 font-semibold text-content-inverse transition-colors hover:bg-accent-hover"
       >
         {t('backHome')}
       </Link>

@@ -8,7 +8,7 @@ export const badgeVariants = cva(
     variants: {
       variant: {
         neutral: 'border-border bg-surface-overlay text-content-secondary',
-        brand: 'border-border-brand bg-brand-950 text-brand-300',
+        brand: 'border-border-brand bg-accent-soft text-accent-text',
         success: 'border-border bg-surface-overlay text-state-success',
         warning: 'border-border bg-surface-overlay text-state-warning',
         danger: 'border-border bg-surface-overlay text-state-danger',

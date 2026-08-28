@@ -93,3 +93,26 @@ describe('§18 no user-facing copy in the design system', () => {
     expect(jsxText, `hard-coded text: ${jsxText.join(' | ')}`).toEqual([]);
   });
 });
+
+/**
+ * §16a: nothing may reach for a colour that only works in one theme.
+ *
+ * The raw `brand-*` ramp is theme-independent by design — it is the brand
+ * identity, not a semantic role — so a component that renders `bg-brand-500`
+ * looks correct on dark and fails WCAG on light. That is exactly what happened:
+ * every primitive here used the ramp for fills, focus rings and accent text,
+ * and Lighthouse found it at 2.4:1 the first time /dev/ui was audited in light
+ * mode.
+ *
+ * The semantic tokens (`accent`, `accent-hover`, `accent-text`, `accent-soft`)
+ * carry a value per theme and are asserted against WCAG in @barff/config.
+ */
+describe('§16a theme-independent colours', () => {
+  it('uses no raw brand-ramp utility', () => {
+    const offenders = files
+      .filter(({ source }) => /\b(?:bg|text|border|outline|from|to|via)-brand-\d/.test(source))
+      .map(({ name }) => name);
+
+    expect(offenders).toEqual([]);
+  });
+});
