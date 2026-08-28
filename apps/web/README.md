@@ -75,6 +75,48 @@ structurally true rather than a claim about animation frames.
 > ⚠ The brand green, the font stack and the seven juice accents are
 > **placeholders** — `docs/OPEN-QUESTIONS.md` → Q-011, Q-028, Q-029.
 
+## Pages and data (§4)
+
+`/`, `/company`, `/products`, `/products/[slug]`. Everything on them comes from
+the public API through `src/lib/content-api.ts`.
+
+Two rules that layer holds to:
+
+- **Nothing throws.** A page that cannot reach the API renders its empty state.
+  The API is a separate deployment, and a rolling restart of it should degrade
+  barff.uz, never take it down.
+- **The build does not need a live API.** CI builds with nothing running, so
+  `generateStaticParams` returning an empty list is a normal outcome. Unknown
+  slugs then render on demand and are cached.
+
+The response shapes live in `@barff/types` (`public-content.ts`) and the API's
+mappers are annotated with them, so renaming a field on either side is a
+compile error rather than a page quietly rendering `undefined`.
+
+### Sections render only with real data
+
+Statistics, certificates and news are absent until the CMS carries them.
+`CLAUDE.md` §1 and §19 forbid inventing production figures or certificates, and
+a homepage showing `1000+ MOCK` is worse than a shorter homepage — a screenshot
+of it outlives the placeholder. Each section appears the moment an editor fills
+it in, with no code change.
+
+### Why there is no `loading.tsx`
+
+A route-level `loading.tsx` opens a Suspense boundary, and Next then streams the
+response. Two things break when it does, both verified in a browser rather than
+reasoned about:
+
+1. **Soft 404s.** The `200` status line is sent before the page can call
+   `notFound()`, so every draft product URL returned `200` with 404 content.
+2. **Metadata in the wrong place.** `<meta name="description">` was emitted into
+   the `<body>` instead of `<head>` — on every user agent, including the crawler
+   path Next reserves for bots. §19 requires a description on every public page.
+
+So the marketing pages have no loading route, and `/products` puts its skeleton
+in a `<Suspense>` _inside_ the page, around the grid only. The shell and its
+metadata resolve first; just the grid streams.
+
 ## Accessibility
 
 Lighthouse accessibility is **100/100** on all three locales, with zero failing

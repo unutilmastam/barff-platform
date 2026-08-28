@@ -12,9 +12,7 @@ export function Footer() {
   return (
     <footer className="mt-auto border-t border-border bg-surface-raised">
       <Container className="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-content-muted">
-          © {year} BARFF. {t('rights')}
-        </p>
+        <p className="text-sm text-content-muted">{t('copyright', { year, brand: 'BARFF' })}</p>
 
         <nav aria-label={tNav('footer')}>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">

@@ -13,7 +13,11 @@ import { ThemeToggle } from './theme-toggle';
  * Only the pages that exist are linked. The rest arrive in S12–S13; linking
  * them now would put dead links in the navigation and in the sitemap.
  */
-const NAV_ITEMS = [{ href: '/', key: 'home' }] as const;
+const NAV_ITEMS = [
+  { href: '/', key: 'home' },
+  { href: '/products', key: 'products' },
+  { href: '/company', key: 'company' },
+] as const;
 
 export function Header() {
   const t = useTranslations('nav');

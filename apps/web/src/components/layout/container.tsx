@@ -3,7 +3,7 @@ import { type ReactNode } from 'react';
 interface ContainerProps {
   children: ReactNode;
   /** Rendered as a different element where the landmark matters. */
-  as?: 'div' | 'section' | 'header' | 'footer' | 'main' | 'nav';
+  as?: 'div' | 'section' | 'header' | 'footer' | 'main' | 'nav' | 'article';
   className?: string;
 }
 

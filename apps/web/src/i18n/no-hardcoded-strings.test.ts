@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '@barff/types';
 
@@ -38,25 +39,59 @@ function collectTsxFiles(dir: string, found: string[] = []): string[] {
 }
 
 /**
- * JSX text nodes: the content between a `>` and the next `<`.
+ * JSX text and user-facing attributes, read with the TypeScript parser.
  *
- * Newlines are deliberately inside the character class. Excluding them missed
- * every multi-line element — which is most of them, since Prettier puts the
- * text of a long `<Link>` on its own line. The first version of this check
- * passed against a deliberately planted string for exactly that reason.
+ * The first version matched `>([^<>{}]+)<` against the raw source, which is
+ * wrong in both directions. It missed multi-line elements until that was fixed
+ * in S06 — and it reports every arrow function as copy, because `(image) =>
+ * image !== primary` contains a `>` followed by text followed by a `<` from the
+ * next generic. Four files failed that way the moment S12 added real logic.
+ *
+ * A parser knows what a JSX text node is. `typescript` is already a dependency
+ * here, so this costs nothing but the import.
  */
-function extractJsxText(source: string): string[] {
-  const matches = source.matchAll(/>([^<>{}]+)</g);
-  return [...matches].map((match) => (match[1] ?? '').trim()).filter((text) => text.length > 0);
+function extractStrings(source: string, fileName: string): string[] {
+  const tree = ts.createSourceFile(
+    fileName,
+    source,
+    ts.ScriptTarget.Latest,
+    /* setParentNodes */ true,
+    ts.ScriptKind.TSX,
+  );
+
+  const found: string[] = [];
+
+  const visit = (node: ts.Node): void => {
+    if (ts.isJsxText(node)) {
+      const value = node.text.trim();
+      if (value !== '') found.push(value);
+    }
+
+    // Props a screen reader or the user actually reads. A literal here is just
+    // as untranslated as one in the body.
+    if (
+      ts.isJsxAttribute(node) &&
+      node.initializer !== undefined &&
+      ts.isStringLiteral(node.initializer) &&
+      USER_FACING_PROPS.has(node.name.getText(tree))
+    ) {
+      found.push(node.initializer.text);
+    }
+
+    ts.forEachChild(node, visit);
+  };
+
+  visit(tree);
+  return found;
 }
 
-/** Literals in props a screen reader or the user actually reads. */
-function extractUserFacingProps(source: string): string[] {
-  const matches = source.matchAll(
-    /(?:aria-label|title|placeholder|alt|aria-description)=(?:"([^"]+)"|'([^']+)')/g,
-  );
-  return [...matches].map((match) => match[1] ?? match[2] ?? '').filter(Boolean);
-}
+const USER_FACING_PROPS = new Set([
+  'aria-label',
+  'title',
+  'placeholder',
+  'alt',
+  'aria-description',
+]);
 
 function isSuspicious(text: string): boolean {
   if (ALLOWED.has(text)) return false;
@@ -87,9 +122,7 @@ describe('no hard-coded user-facing strings', () => {
       // page is not part of the public site.
       if (file.includes(join('dev', 'ui'))) return;
 
-      const offenders = [...extractJsxText(source), ...extractUserFacingProps(source)].filter(
-        isSuspicious,
-      );
+      const offenders = extractStrings(source, file).filter(isSuspicious);
 
       expect(offenders, `hard-coded text in ${file}: ${offenders.join(' | ')}`).toEqual([]);
     },
@@ -97,17 +130,39 @@ describe('no hard-coded user-facing strings', () => {
 });
 
 describe('message catalogues', () => {
+  type MessageTree = { [key: string]: string | MessageTree };
+
   const catalogues = LOCALES.map((locale) => ({
     locale,
     messages: JSON.parse(
       readFileSync(join(SRC, 'i18n', 'messages', `${locale}.json`), 'utf8'),
-    ) as Record<string, Record<string, string>>,
+    ) as MessageTree,
   }));
 
-  function flatten(messages: Record<string, Record<string, string>>): string[] {
+  /**
+   * Every leaf, as a dotted path.
+   *
+   * Recursive because next-intl namespaces nest — `home.cta.products` is one
+   * message. The first version of this helper only walked two levels, so it
+   * both missed nested keys when comparing languages and crashed on them when
+   * checking for empties.
+   */
+  function flatten(messages: MessageTree, prefix = ''): string[] {
     return Object.entries(messages)
-      .flatMap(([namespace, entries]) => Object.keys(entries).map((key) => `${namespace}.${key}`))
+      .flatMap(([key, value]) => {
+        const path = prefix === '' ? key : `${prefix}.${key}`;
+        return typeof value === 'string' ? [path] : flatten(value, path);
+      })
       .sort();
+  }
+
+  function leaves(messages: MessageTree, prefix = ''): [string, string][] {
+    return Object.entries(messages).flatMap(([key, value]) => {
+      const path = prefix === '' ? key : `${prefix}.${key}`;
+      return typeof value === 'string'
+        ? ([[path, value]] as [string, string][])
+        : leaves(value, path);
+    });
   }
 
   it('exists for every supported locale', () => {
@@ -129,10 +184,24 @@ describe('message catalogues', () => {
 
   it('has no empty translations', () => {
     for (const { locale, messages } of catalogues) {
-      for (const [namespace, entries] of Object.entries(messages)) {
-        for (const [key, value] of Object.entries(entries)) {
-          expect(value.trim(), `${locale}: ${namespace}.${key} is empty`).not.toBe('');
-        }
+      for (const [path, value] of leaves(messages)) {
+        expect(value.trim(), `${locale}: ${path} is empty`).not.toBe('');
+      }
+    }
+  });
+
+  it('keeps interpolation placeholders identical across languages', () => {
+    // `{count}` renamed in one language renders the literal brace on that
+    // version only. Same failure shape as a missing key, and just as invisible.
+    const placeholders = (value: string) => (value.match(/\{[a-zA-Z0-9_]+\}/g) ?? []).sort();
+    const [reference, ...rest] = catalogues;
+    const referenceLeaves = new Map(leaves(reference!.messages));
+
+    for (const catalogue of rest) {
+      for (const [path, value] of leaves(catalogue.messages)) {
+        expect(placeholders(value), `${catalogue.locale}: ${path} placeholders differ`).toEqual(
+          placeholders(referenceLeaves.get(path) ?? ''),
+        );
       }
     }
   });

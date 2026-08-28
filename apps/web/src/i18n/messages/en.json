@@ -24,12 +24,35 @@
   "home": {
     "title": "BARFF",
     "tagline": "Beverage manufacturer",
-    "shellNotice": "Site under construction. This is the structure and visual foundation; content arrives in later steps."
+    "cta": {
+      "products": "View products",
+      "company": "About the company"
+    },
+    "products": {
+      "heading": "Products",
+      "all": "All products"
+    },
+    "process": {
+      "heading": "How it is made"
+    },
+    "quality": {
+      "heading": "Quality and certificates",
+      "openDocument": "Open document"
+    },
+    "partnership": {
+      "heading": "Become a partner",
+      "body": "BARFF works with distributors and retail across Uzbekistan. Get in touch to discuss terms.",
+      "cta": "View the catalogue"
+    },
+    "news": {
+      "heading": "News"
+    }
   },
   "footer": {
     "rights": "All rights reserved.",
     "privacy": "Privacy policy",
-    "terms": "Terms of use"
+    "terms": "Terms of use",
+    "copyright": "© {year} {brand}. All rights reserved."
   },
   "error": {
     "title": "Something went wrong",
@@ -48,5 +71,23 @@
     "light": "Light",
     "dark": "Dark",
     "change": "Change theme. Current: {current}."
+  },
+  "company": {
+    "title": "Company",
+    "intro": "BARFF is a beverage manufacturer in Uzbekistan."
+  },
+  "products": {
+    "title": "Products",
+    "intro": "The BARFF juice range.",
+    "allCategories": "All",
+    "filterLabel": "Filter by category",
+    "empty": "No products are published yet.",
+    "variants": "Volumes",
+    "ingredients": "Ingredients",
+    "storage": "Storage",
+    "shelfLife": "Shelf life",
+    "days": "{count} days",
+    "documents": "Documents",
+    "volume": "{volume} ml"
   }
 }

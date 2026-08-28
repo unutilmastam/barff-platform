@@ -41,3 +41,19 @@ export function resetAccentGlowStyle(): CSSProperties {
 export function isProductAccent(value: string): value is ProductAccent {
   return (PRODUCT_ACCENT_SLUGS as readonly string[]).includes(value);
 }
+
+/**
+ * The attribute `ProductAccentScope` reads to decide which product is in focus.
+ *
+ * Lives here, not in the scope component, because that component is
+ * `'use client'` — and every export of a client module becomes a *client
+ * reference*. A server component calling one gets "Attempted to call
+ * accentTargetProps() from the server", and if a Suspense boundary is above it,
+ * the failure is swallowed into a loading fallback: the section simply never
+ * appears, with nothing in the logs of a passing build.
+ */
+export const ACCENT_SLUG_ATTRIBUTE = 'data-accent-slug';
+
+/** Marks the element whose hover — or viewport position — sets the accent. */
+export const accentTargetProps = (slug: string): Record<string, string> =>
+  isProductAccent(slug) ? { [ACCENT_SLUG_ATTRIBUTE]: slug } : {};
