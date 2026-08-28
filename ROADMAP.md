@@ -75,7 +75,7 @@ Claude Code updates this list. `[x]` = done and merged.
 - [x] S06 Next.js web shell — **PHASE 0 GATE**
 
 **Phase 1**
-- [ ] S07 Design system (`packages/ui`)
+- [x] S07 Design system (`packages/ui`)
 - [ ] S08 Media/storage module
 - [ ] S09 Products domain
 - [ ] S10 Content domain (news, certificates, gallery, documents, settings)

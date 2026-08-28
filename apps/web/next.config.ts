@@ -14,7 +14,15 @@ const nextConfig: NextConfig = {
   },
 
   // Workspace packages ship TypeScript source, so Next must compile them.
-  transpilePackages: ['@barff/types', '@barff/utils', '@barff/validation', '@barff/config'],
+  // @barff/ui ships TypeScript source rather than a bundle, because
+  // 'use client' directives do not survive bundling reliably.
+  transpilePackages: [
+    '@barff/types',
+    '@barff/ui',
+    '@barff/utils',
+    '@barff/validation',
+    '@barff/config',
+  ],
 
   // Standalone output is what infrastructure/docker/nextjs.Dockerfile copies.
   output: 'standalone',

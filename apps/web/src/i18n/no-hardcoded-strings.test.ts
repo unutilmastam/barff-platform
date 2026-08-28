@@ -82,6 +82,11 @@ describe('no hard-coded user-facing strings', () => {
       // one documented exception.
       if (file.endsWith(join('app', 'not-found.tsx'))) return;
 
+      // The design-system review route is a developer tool that is not served
+      // in production. §18 exists so the public site can be localized; this
+      // page is not part of the public site.
+      if (file.includes(join('dev', 'ui'))) return;
+
       const offenders = [...extractJsxText(source), ...extractUserFacingProps(source)].filter(
         isSuspicious,
       );

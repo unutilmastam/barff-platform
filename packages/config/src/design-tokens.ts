@@ -64,7 +64,20 @@ export const brand = {
 export const state = {
   success: '#2EB66A',
   warning: '#E0A32E',
+  /**
+   * Danger as **text or border** on a dark surface — 5.22:1 on `surface.base`.
+   */
   danger: '#E05252',
+  /**
+   * Danger as a **filled background** under `content.primary` — 4.81:1.
+   *
+   * Two tokens because one colour cannot do both jobs: readable red text on a
+   * dark surface has to be light, and a red fill under white text has to be
+   * dark. Asking a single value to satisfy both is arithmetically impossible,
+   * and the compromise fails one of them silently. Both ratios are asserted in
+   * `contrast.test.ts`.
+   */
+  dangerFill: '#C43C3C',
   info: '#4A9EE0',
 } as const;
 
