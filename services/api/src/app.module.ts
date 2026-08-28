@@ -15,6 +15,7 @@ import { RequestIdMiddleware } from './common/http/request-id.middleware.js';
 import { HealthModule } from './health/health.module.js';
 import { MediaModule } from './media/media.module.js';
 import { ProductsModule } from './products/products.module.js';
+import { ContentModule } from './content/content.module.js';
 
 /**
  * Root module.
@@ -32,6 +33,7 @@ import { ProductsModule } from './products/products.module.js';
     AuthModule,
     MediaModule,
     ProductsModule,
+    ContentModule,
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({

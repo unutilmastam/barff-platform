@@ -16,7 +16,11 @@ import {
 } from 'class-validator';
 import { SortableQueryDto } from '../../common/dto/sort-query.dto.js';
 import { ToBoolean } from '../../common/dto/to-boolean.decorator.js';
-import { LocalizedRichTextDto, LocalizedTextDto, SLUG_PATTERN } from './category.dto.js';
+import {
+  LocalizedRichTextDto,
+  LocalizedTextDto,
+  SLUG_PATTERN,
+} from '../../common/dto/localized.dto.js';
 
 export const PRODUCT_DOCUMENT_KINDS = [
   'CERTIFICATE',

@@ -168,6 +168,12 @@ admin user from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`. If those two are uns
 skipped with a warning and everything else still seeds — staging and production create their
 administrator out of band.
 
+It also seeds the **content skeleton**: the eight production stages of `CLAUDE.md` §4 with their
+order, and the landing-page sections as empty, unpublished drafts. That is structure, not content —
+it gives the CMS and the web app one agreed set of keys — so unlike the mock catalogue below it is
+seeded everywhere, including production. Not a word of copy is invented; see `docs/OPEN-QUESTIONS.md`
+Q-026 and Q-027.
+
 The **MOCK product catalogue** is separate and opt-in:
 
 ```bash

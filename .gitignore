@@ -60,3 +60,7 @@ Thumbs.db
 *.swp
 
 # NOTE: assets/ is source-controlled on purpose (see ASSETS.md).
+
+# Redis snapshot, written into the working directory when redis-server is
+# started from here for local testing.
+dump.rdb

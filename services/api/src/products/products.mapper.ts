@@ -1,4 +1,5 @@
 import { type Prisma } from '../../generated/prisma/index.js';
+import { type ResolveMedia } from '../media/media-resolver.service.js';
 
 /**
  * Shapes a product row for a response.
@@ -18,16 +19,7 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
   };
 }>;
 
-export interface ImageUrls {
-  url: string;
-  blurDataUrl: string | null;
-  variants: { label: string; url: string; width: number; height: number }[];
-}
-
-/** Resolves a media asset to URLs. Injected so the mapper stays synchronous. */
-export type ResolveImage = (mediaAssetId: string) => ImageUrls | undefined;
-
-export function toPublicProduct(product: ProductWithRelations, resolveImage: ResolveImage) {
+export function toPublicProduct(product: ProductWithRelations, resolveImage: ResolveMedia) {
   return {
     id: product.id,
     slug: product.slug,

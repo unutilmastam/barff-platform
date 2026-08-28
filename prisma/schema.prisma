@@ -386,6 +386,285 @@ model ProductPrice {
 }
 
 // ---------------------------------------------------------------------------
+// Content (CMS)
+// ---------------------------------------------------------------------------
+
+/// Where a gallery photo belongs.
+///
+/// A presentation taxonomy for our own CMS, not a claim about BARFF: the values
+/// mirror the asset kinds ASSETS.md §4 asks the client to supply.
+enum GalleryCategory {
+  FACTORY
+  PRODUCTION
+  PRODUCTS
+  WAREHOUSE
+  TEAM
+  EVENTS
+  OTHER
+
+  @@map("gallery_category")
+}
+
+/// What a public download is.
+enum PublicDocumentKind {
+  CATALOG
+  PRICE_LIST
+  PRESENTATION
+  CERTIFICATE
+  LEGAL
+  OTHER
+
+  @@map("public_document_kind")
+}
+
+/// The shape a homepage/landing section renders as.
+///
+/// The frontend switches on this, so adding a value is a frontend change too —
+/// which is the point. A free-text `type` would let the CMS ask for a layout
+/// that does not exist and fail at render time instead of at save time.
+enum PageSectionType {
+  HERO
+  RICH_TEXT
+  STATS
+  MEDIA
+  CTA
+
+  @@map("page_section_type")
+}
+
+/// A news article (`/news`, `/news/[slug]`).
+model NewsArticle {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// URL segment. Unique, and never reused — see `Product.slug`.
+  slug String @unique
+
+  /// Localized `{ uz, ru, en }`.
+  title   Json
+  excerpt Json?
+  body    Json?
+
+  /// Restricted rather than cascaded, as everywhere content points at media:
+  /// deleting an asset a live page shows should fail loudly.
+  coverImageId String?     @map("cover_image_id") @db.Uuid
+  coverImage   MediaAsset? @relation("NewsCoverImages", fields: [coverImageId], references: [id], onDelete: Restrict)
+
+  /// Per-article SEO overrides `{ title, description }` per locale.
+  seo Json?
+
+  /// Draft by default, exactly like a product: content reaches barff.uz only
+  /// when somebody publishes it deliberately.
+  isActive    Boolean   @default(false) @map("is_active")
+  publishedAt DateTime? @map("published_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  /// Soft delete: the slug stays reserved so a dead link can never be pointed
+  /// at unrelated content.
+  deletedAt DateTime? @map("deleted_at")
+
+  /// News has no `displayOrder`. It is ordered by publication date, which is
+  /// what a reader expects and what an editor would otherwise have to maintain
+  /// by hand forever. Editorial ordering exists on the models where a human
+  /// really does choose the sequence — gallery, certificates, documents,
+  /// sections and production steps.
+  @@index([isActive, publishedAt])
+  @@map("news")
+}
+
+/// A certificate shown on `/quality` and attachable to a product.
+model Certificate {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Localized `{ uz, ru, en }`.
+  title       Json
+  description Json?
+
+  /// ⚠ All four are BARFF facts that have not been supplied (Q-002, Q-013), so
+  /// every one is nullable: a row can exist without anything being invented.
+  issuer            String?
+  certificateNumber String?   @map("certificate_number")
+  issuedAt          DateTime? @map("issued_at")
+  expiresAt         DateTime? @map("expires_at")
+
+  /// The scan itself (PDF).
+  documentId String?     @map("document_id") @db.Uuid
+  document   MediaAsset? @relation("CertificateDocuments", fields: [documentId], references: [id], onDelete: Restrict)
+  /// Optional thumbnail for the listing.
+  imageId    String?     @map("image_id") @db.Uuid
+  image      MediaAsset? @relation("CertificateImages", fields: [imageId], references: [id], onDelete: Restrict)
+
+  displayOrder Int       @default(0) @map("display_order")
+  isActive     Boolean   @default(false) @map("is_active")
+  publishedAt  DateTime? @map("published_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([isActive, displayOrder])
+  @@map("certificates")
+}
+
+/// One image in the public gallery.
+model GalleryItem {
+  id String @id @default(uuid()) @db.Uuid
+
+  mediaAssetId String     @map("media_asset_id") @db.Uuid
+  mediaAsset   MediaAsset @relation("GalleryItems", fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  /// Localized. Alt text falls back to the asset's own when absent.
+  title   Json?
+  caption Json?
+
+  category GalleryCategory @default(OTHER)
+
+  displayOrder Int       @default(0) @map("display_order")
+  isActive     Boolean   @default(false) @map("is_active")
+  publishedAt  DateTime? @map("published_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([isActive, category, displayOrder])
+  @@map("gallery_items")
+}
+
+/// A file the public may download — catalogue, presentation, legal document.
+///
+/// Named `PublicDocument` rather than `Document` because the distinction from
+/// `ProductDocument` is exactly the thing worth not getting wrong: anything
+/// here is reachable without a login.
+model PublicDocument {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Localized `{ uz, ru, en }`.
+  title       Json
+  description Json?
+
+  kind PublicDocumentKind @default(OTHER)
+
+  mediaAssetId String     @map("media_asset_id") @db.Uuid
+  mediaAsset   MediaAsset @relation("PublicDocuments", fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  displayOrder Int       @default(0) @map("display_order")
+  isActive     Boolean   @default(false) @map("is_active")
+  publishedAt  DateTime? @map("published_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([isActive, displayOrder])
+  @@map("documents")
+}
+
+/// An editable block of a public page — the homepage hero and the sections
+/// under it (`CLAUDE.md` §4), and the same for the other landing pages.
+model PageSection {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Route the section belongs to, without a locale prefix: `home`, `company`,
+  /// `production`, `quality`, `partners`.
+  page String
+  /// Stable identifier the frontend looks the section up by, e.g. `hero`.
+  /// Never renamed once a page references it.
+  key  String
+
+  type PageSectionType @default(RICH_TEXT)
+
+  /// Localized `{ uz, ru, en }`.
+  heading    Json?
+  subheading Json?
+  body       Json?
+
+  mediaAssetId String?     @map("media_asset_id") @db.Uuid
+  mediaAsset   MediaAsset? @relation("PageSectionMedia", fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  /// Localized label; the target is a plain path, validated on write.
+  ctaLabel Json?   @map("cta_label")
+  ctaHref  String? @map("cta_href")
+
+  /// Type-specific payload — the items of a `STATS` block, for example. JSON
+  /// because each type needs a different shape and a column per type would be
+  /// mostly nulls. S12 defines the shape per type as it builds each section;
+  /// nothing is seeded, because the statistics themselves are unsupplied
+  /// company facts (Q-001).
+  data Json?
+
+  displayOrder Int     @default(0) @map("display_order")
+  isActive     Boolean @default(false) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([page, key])
+  @@index([page, isActive, displayOrder])
+  @@map("page_sections")
+}
+
+/// One stage of the production process (`CLAUDE.md` §4).
+///
+/// The eight stages and their order are fixed by the specification, so `key` is
+/// a stable identifier the frontend can rely on and the seed can re-run
+/// against. Their descriptions are not specified and stay empty rather than
+/// invented; the photographs are Q-012.
+model ProductionStep {
+  id String @id @default(uuid()) @db.Uuid
+
+  key String @unique
+
+  /// Localized `{ uz, ru, en }`.
+  name        Json
+  description Json?
+
+  mediaAssetId String?     @map("media_asset_id") @db.Uuid
+  mediaAsset   MediaAsset? @relation("ProductionStepMedia", fields: [mediaAssetId], references: [id], onDelete: Restrict)
+
+  /// Position in the process, not an editorial preference — but named for
+  /// consistency with the rest of the CMS.
+  displayOrder Int     @default(0) @map("display_order")
+  isActive     Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, displayOrder])
+  @@map("production_steps")
+}
+
+/// Per-route SEO overrides (`CLAUDE.md` §19).
+///
+/// Only for routes that have no row of their own. A product and a news article
+/// carry their own `seo` column, because their metadata belongs to the record,
+/// not to a path that might change. S15 owns the defaults every page falls back
+/// to; this table is only where an editor overrides one.
+model SeoMetadata {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Normalized on write: leading slash, no trailing slash, no locale prefix.
+  path String @unique
+
+  /// Localized `{ uz, ru, en }`.
+  title       Json?
+  description Json?
+
+  ogImageId String?     @map("og_image_id") @db.Uuid
+  ogImage   MediaAsset? @relation("SeoOgImages", fields: [ogImageId], references: [id], onDelete: Restrict)
+
+  canonicalUrl String? @map("canonical_url")
+  /// Keeps a page out of the index without deleting it — a staging-only or
+  /// seasonal route, for instance.
+  noindex      Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("seo_metadata")
+}
+
+// ---------------------------------------------------------------------------
 // Media
 // ---------------------------------------------------------------------------
 
@@ -453,6 +732,15 @@ model MediaAsset {
 
   productImages    ProductImage[]    @relation("ProductImages")
   productDocuments ProductDocument[] @relation("ProductDocuments")
+
+  newsCoverImages      NewsArticle[]    @relation("NewsCoverImages")
+  certificateDocuments Certificate[]    @relation("CertificateDocuments")
+  certificateImages    Certificate[]    @relation("CertificateImages")
+  galleryItems         GalleryItem[]    @relation("GalleryItems")
+  publicDocuments      PublicDocument[] @relation("PublicDocuments")
+  pageSectionMedia     PageSection[]    @relation("PageSectionMedia")
+  productionStepMedia  ProductionStep[] @relation("ProductionStepMedia")
+  seoOgImages          SeoMetadata[]    @relation("SeoOgImages")
 
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")

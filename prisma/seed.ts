@@ -15,6 +15,7 @@ import { PrismaClient } from '../services/api/generated/prisma/index.js';
 import { Role as RoleKey } from '@barff/types';
 import { hashPassword } from '../services/api/src/common/crypto/password.js';
 import { mockProductsRequested, seedMockProducts } from './seed-mock-products.js';
+import { seedContentSkeleton } from './seed-content.js';
 
 const prisma = new PrismaClient();
 
@@ -415,6 +416,12 @@ async function main(): Promise<void> {
 
   const adminEmail = await seedAdminUser(roleIds);
   console.info(`  admin user:   ${adminEmail ?? 'skipped (no SEED_ADMIN_* env)'}`);
+
+  // Structural, not placeholder content — seeded everywhere. See
+  // prisma/seed-content.ts.
+  const content = await seedContentSkeleton(prisma);
+  console.info(`  production steps: ${content.steps}`);
+  console.info(`  page sections:    ${content.sections}`);
 
   // Opt-in, and never in production. See prisma/seed-mock-products.ts.
   if (mockProductsRequested()) {
