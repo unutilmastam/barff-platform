@@ -6,6 +6,7 @@ import { StorageModule } from './storage/storage.module.js';
 import { ImageProcessorService } from './processing/image-processor.service.js';
 import { MediaController } from './media.controller.js';
 import { MediaService } from './media.service.js';
+import { MediaResolverService } from './media-resolver.service.js';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { MediaService } from './media.service.js';
     }),
   ],
   controllers: [MediaController],
-  providers: [MediaService, ImageProcessorService],
-  exports: [MediaService],
+  providers: [MediaService, ImageProcessorService, MediaResolverService],
+  exports: [MediaService, MediaResolverService],
 })
 export class MediaModule {}

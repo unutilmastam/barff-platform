@@ -78,7 +78,7 @@ Claude Code updates this list. `[x]` = done and merged.
 - [x] S07 Design system (`packages/ui`)
 - [x] S08 Media/storage module
 - [x] S09 Products domain
-- [ ] S10 Content domain (news, certificates, gallery, documents, settings)
+- [x] S10 Content domain (news, certificates, gallery, documents, settings)
 - [ ] S11 Public API + caching
 - [ ] S12 Web: home + company + products
 - [ ] S13 Web: production, quality, gallery, news, contact

@@ -234,6 +234,54 @@ Q-021) appears anywhere in the file. `qulupnay-ananas` seeds as a **draft**: its
 artwork shows strawberry and pineapple while the printed text reads
 _Гранатовый сок_, so nobody yet knows what that product is (Q-019).
 
+## Content / CMS (§8, §19)
+
+Public: `GET /news` · `GET /news/:slug` · `GET /content/certificates` ·
+`/content/gallery` · `/content/documents` · `/content/production-steps` ·
+`/content/sections/:page` · `/content/seo?path=…` · `/content/settings`.
+Admin: `/admin/news`, `/admin/certificates`, `/admin/gallery`,
+`/admin/documents`, `/admin/page-sections`, `/admin/production-steps`,
+`/admin/seo`, `/admin/settings`.
+
+**Publishing is its own permission and its own endpoint.** `content:update`
+edits; `content:publish` puts a page in front of visitors via
+`POST /admin/<resource>/:id/publish` (and `/unpublish`). `isActive` is not a
+field on any create or update payload, so the third permission cannot be
+bypassed by sending the flag along with a typo fix. Reads need `content:read`,
+which — unlike `products:read` — no non-admin role holds, so there is no second
+"read everything" permission here.
+
+**Drafts are unreachable, not merely filtered.** Every public list DTO is
+missing the fields that could name one, and `forbidNonWhitelisted` turns an
+attempt into a 400 rather than ignoring it. A draft article returns the same
+404 as a slug that never existed.
+
+**Everything follows the products vocabulary**: `isActive` decides visibility,
+`publishedAt` is stamped once on the transition, `deletedAt` retires a row
+without destroying it, and a news slug stays reserved after deletion. The two
+exceptions are configuration rather than content and say so: page sections and
+production steps are hard-deleted, because nothing links to a section that no
+longer exists.
+
+**Production stages are edit-only.** The eight stages of §4 are seeded with
+their order; the API has no create and no delete for them, so the CMS cannot
+publish a process BARFF does not run. Their descriptions are empty rather than
+invented (Q-027), and the photographs are Q-012.
+
+**Link targets must be site-relative.** `ctaHref` and the SEO `path` are matched
+against `RELATIVE_PATH_PATTERN`, which rejects `https://…` _and_ `//host` — the
+protocol-relative form is the standard way past an open-redirect filter, and it
+satisfies "starts with a slash" perfectly well.
+
+**Settings are declared in the seed, never created through the API**, and are
+private unless explicitly flagged `isPublic`. Connection strings and keys are
+not in this table at all; they come from the environment (§12).
+
+Certificates carry no invented facts: issuer, number and both dates are
+nullable, because they are Q-002 and Q-013. Page sections are seeded as empty
+drafts so the CMS and the web app agree on a set of `key`s while the copy stays
+BARFF's to write (Q-026, and Q-001 for the homepage statistics).
+
 ## Tests
 
 ```bash

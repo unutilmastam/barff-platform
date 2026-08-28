@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isValidSlug } from '@barff/utils';
-import { SLUG_PATTERN } from './category.dto.js';
+import { SLUG_PATTERN } from './localized.dto.js';
 
 /**
  * `SLUG_PATTERN` is a second copy of the rule `isValidSlug` implements —

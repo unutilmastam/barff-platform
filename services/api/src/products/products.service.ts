@@ -8,13 +8,9 @@ import { buildPaginationMeta, type PaginatedResult } from '@barff/types';
 import { type Prisma } from '../../generated/prisma/index.js';
 import { PrismaService } from '../common/prisma/prisma.service.js';
 import { AuditService } from '../common/audit/audit.service.js';
-import { MediaService } from '../media/media.service.js';
-import {
-  PRODUCT_INCLUDE,
-  toAdminProduct,
-  toPublicProduct,
-  type ImageUrls,
-} from './products.mapper.js';
+import { MediaResolverService } from '../media/media-resolver.service.js';
+import { assertMediaKind } from '../media/media-reference.js';
+import { PRODUCT_INCLUDE, toAdminProduct, toPublicProduct } from './products.mapper.js';
 import {
   type AdminListProductsDto,
   type AttachDocumentDto,
@@ -54,7 +50,7 @@ export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
-    private readonly media: MediaService,
+    private readonly mediaResolver: MediaResolverService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -89,7 +85,7 @@ export class ProductsService {
       this.prisma.product.count({ where }),
     ]);
 
-    const resolve = await this.imageResolver(products);
+    const resolve = await this.resolveImages(products);
     return {
       items: products.map((product) => toPublicProduct(product, resolve)),
       meta: buildPaginationMeta(query.page, query.pageSize, totalItems),
@@ -105,7 +101,7 @@ export class ProductsService {
     // them would confirm which slugs are being worked on before launch.
     if (product === null) throw new NotFoundException(this.notFound());
 
-    const resolve = await this.imageResolver([product]);
+    const resolve = await this.resolveImages([product]);
     return toPublicProduct(product, resolve);
   }
 
@@ -364,7 +360,7 @@ export class ProductsService {
 
   async attachImage(productId: string, dto: AttachImageDto, actor: Actor): Promise<unknown> {
     await this.findOrThrow(productId);
-    await this.assertMediaExists(dto.mediaAssetId, 'IMAGE');
+    await assertMediaKind(this.prisma, dto.mediaAssetId, 'IMAGE');
 
     const isPrimary = dto.isPrimary ?? false;
     await this.prisma.$transaction(async (tx) => {
@@ -441,7 +437,7 @@ export class ProductsService {
 
   async attachDocument(productId: string, dto: AttachDocumentDto, actor: Actor): Promise<unknown> {
     await this.findOrThrow(productId);
-    await this.assertMediaExists(dto.mediaAssetId, 'DOCUMENT');
+    await assertMediaKind(this.prisma, dto.mediaAssetId, 'DOCUMENT');
 
     await this.prisma.productDocument.create({
       data: {
@@ -544,55 +540,8 @@ export class ProductsService {
     }
   }
 
-  private async assertMediaExists(mediaAssetId: string, kind: 'IMAGE' | 'DOCUMENT'): Promise<void> {
-    const asset = await this.prisma.mediaAsset.findFirst({
-      where: { id: mediaAssetId, deletedAt: null },
-    });
-    if (asset === null) {
-      throw new BadRequestException({ message: 'Media asset not found', code: 'MEDIA_NOT_FOUND' });
-    }
-    if (asset.kind !== kind) {
-      // Attaching a PDF to the gallery would render a broken image; attaching a
-      // photo as a certificate would offer a download that is not one.
-      throw new BadRequestException({
-        message: `Expected a ${kind.toLowerCase()} asset`,
-        code: 'MEDIA_KIND_MISMATCH',
-      });
-    }
-  }
-
-  /**
-   * Resolves every referenced image once, up front.
-   *
-   * Signing a URL per image inside the mapper would be N round-trips for a
-   * listing page; this is one lookup for the whole response.
-   */
-  private async imageResolver(
-    products: { images: { mediaAssetId: string }[] }[],
-  ): Promise<(mediaAssetId: string) => ImageUrls | undefined> {
-    const ids = [...new Set(products.flatMap((p) => p.images.map((i) => i.mediaAssetId)))];
-    const resolved = new Map<string, ImageUrls>();
-
-    for (const id of ids) {
-      try {
-        const asset = await this.media.findOne(id);
-        resolved.set(id, {
-          url: asset.url,
-          blurDataUrl: asset.blurDataUrl ?? null,
-          variants: asset.variants.map((variant) => ({
-            label: variant.label,
-            url: variant.url,
-            width: variant.width,
-            height: variant.height,
-          })),
-        });
-      } catch {
-        // A deleted asset must not take the whole page down; the image is
-        // simply absent from the response.
-      }
-    }
-
-    return (mediaAssetId) => resolved.get(mediaAssetId);
+  private resolveImages(products: { images: { mediaAssetId: string }[] }[]) {
+    return this.mediaResolver.resolve(products.flatMap((p) => p.images.map((i) => i.mediaAssetId)));
   }
 
   private notFound(): { message: string; code: string } {
