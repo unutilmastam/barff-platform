@@ -138,6 +138,45 @@ them from the database, and revoking the session cuts it short immediately. The
 alternative — a lookup per request — buys instant revocation at the price of
 making every authenticated request depend on another service being up.
 
+## Media (§20)
+
+`POST /media` · `PUT /media/:id/file` · `GET /media` · `GET /media/:id` ·
+`DELETE /media/:id`. Every route needs a permission; there is no public upload
+and no public listing.
+
+**Type comes from the bytes.** Extension and `Content-Type` are both chosen by
+the uploader, so neither is consulted for the decision — only magic bytes, from
+a six-format allow-list. **SVG is rejected** even though it is an image format:
+it can carry `<script>`, and serving a user-uploaded one from our own origin is
+stored XSS. Brand vector logos are developer-committed assets, not uploads.
+
+**Images are re-encoded, never stored as received.** That strips EXIF — factory
+and delivery photos carry GPS coordinates and device identifiers nobody meant to
+publish — and it neutralises a file crafted to be both a valid image and a valid
+script. sharp is also given a pixel ceiling, because a decompression bomb is a
+few kilobytes on disk and tens of gigabytes in memory, and a byte-size limit
+alone does not catch it.
+
+Variants are AVIF and WebP at 200/600/800/1200px — the sizes `ASSETS.md` says
+the site actually renders — plus a 16px inline blur placeholder. Nothing is ever
+upscaled.
+
+**Private by default.** A caller that says nothing about visibility gets the safe
+option. Private assets are reachable only through a short-lived signed URL; the
+bucket is never public and no ACL is ever sent on a `PutObject`.
+
+**Ordering matters** in two places: the database row is written *after* the
+bytes are stored, because a stray object is a sweep away and a row pointing at
+nothing is a broken page; and on replace, the old objects are deleted *after*
+the new ones land, so a mid-way failure leaves the asset serving its previous
+content rather than nothing.
+
+Storage sits behind `StorageProvider`. Two implementations ship: S3 (which also
+covers MinIO) and a filesystem provider for local work. The choice is made once
+at boot from configuration — no service branches on it — and production is
+prevented from selecting `filesystem` by the env schema, since the container
+disk is discarded on every deploy.
+
 ## Tests
 
 ```bash

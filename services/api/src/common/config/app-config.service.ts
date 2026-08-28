@@ -83,6 +83,43 @@ export class AppConfigService {
     return { domain: this.get('COOKIE_DOMAIN'), secure: this.get('COOKIE_SECURE') };
   }
 
+  get storage(): {
+    provider: 's3' | 'filesystem';
+    endpoint: string | undefined;
+    region: string;
+    bucket: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    forcePathStyle: boolean;
+    signedUrlTtlSeconds: number;
+    cdnUrl: string | undefined;
+    filesystemRoot: string;
+    publicBaseUrl: string;
+    maxUploadBytes: number;
+  } {
+    const cdnUrl = this.get('MEDIA_CDN_URL');
+    const endpoint = this.get('S3_ENDPOINT');
+    const bucket = this.get('S3_BUCKET');
+    return {
+      provider: this.get('STORAGE_PROVIDER'),
+      endpoint,
+      region: this.get('S3_REGION'),
+      bucket,
+      accessKeyId: this.get('S3_ACCESS_KEY_ID'),
+      secretAccessKey: this.get('S3_SECRET_ACCESS_KEY'),
+      forcePathStyle: this.get('S3_FORCE_PATH_STYLE'),
+      signedUrlTtlSeconds: this.get('S3_SIGNED_URL_TTL'),
+      cdnUrl,
+      filesystemRoot: this.get('MEDIA_FILESYSTEM_ROOT'),
+      // Always absolute. Falling back to a relative `/media` produced a base
+      // that `new URL()` cannot parse, and every successful upload 500'd while
+      // every rejection path kept working — so the failure looked like an
+      // image-processing bug rather than a configuration one.
+      publicBaseUrl: cdnUrl ?? `${this.publicUrl ?? `http://localhost:${this.port}`}/media`,
+      maxUploadBytes: this.get('MEDIA_MAX_UPLOAD_BYTES'),
+    };
+  }
+
   get loginThrottle(): { maxAttempts: number; lockoutSeconds: number } {
     return {
       maxAttempts: this.get('LOGIN_MAX_ATTEMPTS'),

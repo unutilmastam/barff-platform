@@ -13,6 +13,7 @@ import { PermissionsGuard } from './auth/guards/permissions.guard.js';
 import { AllExceptionsFilter } from './common/http/all-exceptions.filter.js';
 import { RequestIdMiddleware } from './common/http/request-id.middleware.js';
 import { HealthModule } from './health/health.module.js';
+import { MediaModule } from './media/media.module.js';
 
 /**
  * Root module.
@@ -28,6 +29,7 @@ import { HealthModule } from './health/health.module.js';
     RedisModule,
     AuditModule,
     AuthModule,
+    MediaModule,
     ThrottlerModule.forRootAsync({
       inject: [AppConfigService],
       useFactory: (config: AppConfigService) => ({
