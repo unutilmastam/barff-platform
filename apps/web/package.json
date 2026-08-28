@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@barff/types": "workspace:*",
+    "@barff/ui": "workspace:*",
     "@barff/utils": "workspace:*",
     "@barff/validation": "workspace:*",
     "@tanstack/react-query": "^5.90.2",

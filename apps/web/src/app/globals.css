@@ -6,6 +6,20 @@
    every value. */
 @config "../../tailwind.config.ts";
 
+/*
+ * Tailwind must scan the design system's source too.
+ *
+ * `@source` and not the `content` array in tailwind.config.ts: v4 resolves
+ * automatic source detection from the CSS file and skips node_modules, and
+ * @barff/ui reaches the app as a symlink in node_modules. The config's content
+ * globs did not reach it, so NONE of the package's utilities were generated —
+ * every component rendered unstyled while still looking plausible on screen,
+ * because the markup and the app's own classes were fine.
+ *
+ * The path is relative to THIS file, not to the project root.
+ */
+@source "../../../../packages/ui/src";
+
 @layer base {
   :root {
     color-scheme: dark;
