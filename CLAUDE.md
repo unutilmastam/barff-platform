@@ -243,6 +243,18 @@ particles/liquid visuals
 Avoid: - generic templates - excessive rounded cards - excessive
 gradients - visual clutter - animation that harms usability
 
+## 16a. Theme
+
+The site supports both dark and light mode.
+
+-   Dark is the default and the primary art direction.
+-   Light mode is a first-class theme, not an inversion --- it needs its
+    own surface, border and shadow values.
+-   Respect `prefers-color-scheme`; provide a manual toggle that
+    persists.
+-   Every token pair must pass WCAG AA in BOTH themes. The contrast test
+    in `@barff/config` must cover light mode too.
+
 ## 17. 3D and motion
 
 Use: - hero bottle scene - subtle floating motion - fruit/liquid
@@ -253,6 +265,26 @@ Performance rules: - dynamic import heavy 3D - lazy-load assets -
 compress textures - use AVIF/WebP - video poster/fallback - simplify
 effects on mobile - support reduced motion - never make animation the
 only way to understand content
+
+## 17a. Reactive colour
+
+Product hover drives an accent colour:
+
+-   Hovering a bottle shifts the page accent to that juice colour
+    (anor, apelsin, olcha, shaftoli, olma, multifrukt,
+    qulupnay-ananas).
+-   The shift is a CSS custom property transition, not a re-render.
+-   Accent affects glow, highlights and small UI accents only. Body
+    text, surfaces and borders never change --- contrast must stay AA at
+    every point of the transition.
+-   Touch devices have no hover: use viewport-centre detection on scroll
+    instead. The effect is decorative and never carries meaning.
+
+## 17b. Pointer motion
+
+Pointer-driven effects (parallax, tilt, magnetic buttons, cursor glow)
+apply on `pointer:fine` devices only. They are always additive --- the
+page must be complete and usable without them.
 
 ## 18. i18n
 
