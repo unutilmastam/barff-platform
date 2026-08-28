@@ -81,6 +81,7 @@ model User {
   auditLogs       AuditLog[]      @relation("AuditActor")
   assignedRoles   UserRole[]      @relation("RoleAssignedBy")
   settingsUpdated SystemSetting[] @relation("SettingUpdatedBy")
+  mediaUploaded   MediaAsset[]    @relation("MediaUploader")
 
   // users.email and users.phone are indexed by @unique above (CLAUDE.md §10).
   // This one keeps the common "active staff" listing off a sequential scan.
@@ -168,6 +169,84 @@ model RolePermission {
   @@id([roleId, permissionId])
   @@index([permissionId])
   @@map("role_permissions")
+}
+
+// ---------------------------------------------------------------------------
+// Media
+// ---------------------------------------------------------------------------
+
+enum MediaKind {
+  IMAGE
+  DOCUMENT
+  VIDEO
+
+  @@map("media_kind")
+}
+
+enum MediaVisibility {
+  /// Signed URL only, short-lived. The default for everything.
+  PRIVATE
+  /// Served through the CDN. Only for content deliberately published.
+  PUBLIC
+
+  @@map("media_visibility")
+}
+
+/// A file in object storage, with the metadata needed to serve it.
+///
+/// The row is written only after the bytes are stored, so a row always
+/// describes something that exists. The reverse — an orphaned object with no
+/// row — is recoverable by a sweep; a row pointing at nothing is a broken page.
+model MediaAsset {
+  id String @id @default(uuid()) @db.Uuid
+
+  /// Path in the bucket. Generated server-side, never derived from the
+  /// uploaded filename — a client-supplied name is a path-traversal vector.
+  storageKey String @unique @map("storage_key")
+  bucket     String
+
+  /// Kept for display and download only. Never used to build a path, and never
+  /// trusted to say what the file is.
+  originalFilename String @map("original_filename")
+  /// Detected from the file's magic bytes, not from its extension or the
+  /// Content-Type the client claimed (CLAUDE.md §20).
+  mimeType         String @map("mime_type")
+  sizeBytes        Int    @map("size_bytes")
+  /// SHA-256 of the stored bytes — integrity checks and duplicate detection.
+  checksum         String
+
+  kind       MediaKind
+  visibility MediaVisibility @default(PRIVATE)
+
+  width       Int?
+  height      Int?
+  /// Tiny inline preview for `next/image` placeholder="blur", so a photo does
+  /// not pop in against an empty box.
+  blurDataUrl String? @map("blur_data_url")
+
+  /// Derived renditions: `[{ label, key, format, width, height, sizeBytes }]`.
+  /// JSON rather than a table: variants are always read with their parent and
+  /// never queried on their own, so a join would buy nothing.
+  variants Json?
+
+  /// Localized alt text (uz/ru/en). Required before an image may be published
+  /// on a public page (§19) — enforced by the CMS in S19, not by the column.
+  altText Json? @map("alt_text")
+  title   Json?
+
+  uploadedById String? @map("uploaded_by_id") @db.Uuid
+  uploadedBy   User?   @relation("MediaUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  /// Soft delete: a product or news article may still reference this row, and
+  /// a hard delete would break the page rather than the link.
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([kind, deletedAt])
+  @@index([createdAt])
+  @@index([checksum])
+  @@map("media_assets")
 }
 
 // ---------------------------------------------------------------------------

@@ -32,6 +32,10 @@ secrets/
 assets/**/generated/
 public/media/generated/
 
+# Uploads written by the local filesystem storage provider
+.media-storage/
+.media-test/
+
 # Local infrastructure state
 .docker-data/
 *.tfstate

@@ -93,6 +93,41 @@ export const envSchema = z
     /** Per-account lockout, on top of the per-IP throttler. */
     LOGIN_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
     LOGIN_LOCKOUT_SECONDS: z.coerce.number().int().positive().default(900),
+
+    // --- Media and object storage (§20) ------------------------------------
+    /**
+     * `s3` in every deployed environment; `filesystem` only for local work
+     * without MinIO. The refinement below refuses `filesystem` in production.
+     */
+    STORAGE_PROVIDER: z.enum(['s3', 'filesystem']).default('s3'),
+    S3_ENDPOINT: z.string().url().optional(),
+    S3_REGION: z.string().min(1).default('us-east-1'),
+    S3_BUCKET: z.string().min(1).default('barff-media'),
+    S3_ACCESS_KEY_ID: z.string().min(1).default('barff_minio'),
+    S3_SECRET_ACCESS_KEY: z.string().min(1).default('barff_minio_dev_password'),
+    /** MinIO and most S3-compatible servers require path-style addressing. */
+    S3_FORCE_PATH_STYLE: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
+    /**
+     * How long a signed URL stays valid. Short on purpose: it is a bearer
+     * credential that gets pasted into chat and forwarded in email.
+     */
+    S3_SIGNED_URL_TTL: z.coerce.number().int().positive().max(86_400).default(900),
+    /** CDN origin for objects deliberately marked public. */
+    MEDIA_CDN_URL: z.string().url().optional(),
+    /** Root for the filesystem provider. Ignored when STORAGE_PROVIDER is s3. */
+    MEDIA_FILESYSTEM_ROOT: z.string().min(1).default('.media-storage'),
+    /**
+     * Upload ceiling. Enforced by multer before the body is buffered, so an
+     * oversized upload is refused rather than read into memory first.
+     */
+    MEDIA_MAX_UPLOAD_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(25 * 1024 * 1024),
   })
   .superRefine((env, ctx) => {
     // Signing both token types with the same key means a refresh token is a
@@ -103,6 +138,16 @@ export const envSchema = z
         code: 'custom',
         path: ['JWT_REFRESH_SECRET'],
         message: 'JWT_REFRESH_SECRET must differ from JWT_ACCESS_SECRET',
+      });
+    }
+    if (env.NODE_ENV === 'production' && env.STORAGE_PROVIDER !== 's3') {
+      // The filesystem provider stores uploads on the container's own disk,
+      // which ECS discards on every deploy. Shipping it would silently lose
+      // every file the client uploaded.
+      ctx.addIssue({
+        code: 'custom',
+        path: ['STORAGE_PROVIDER'],
+        message: 'STORAGE_PROVIDER must be "s3" in production',
       });
     }
     if (env.NODE_ENV === 'production' && !env.COOKIE_SECURE) {
